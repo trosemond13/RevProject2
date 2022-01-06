@@ -1,7 +1,9 @@
 # Default ignored files
+.gitignore
 /shelf/
 /.idea/workspace.xml
 .bsp/
 .idea/
 target/
 /project/target/*
+*.csv
