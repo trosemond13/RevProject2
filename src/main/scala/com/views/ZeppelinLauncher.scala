@@ -9,7 +9,7 @@ object ZeppelinLauncher {
   def createNote(): Unit = {
     val clientConfig = new ClientConfig("http://localhost:8080")
     val zClient = new ZeppelinClient(clientConfig)
-    val notePath = "/notebook/ZepTest"
+    val notePath = "/ZepTest"
     val noteId = "2GUPWXYEA"
 
     try {

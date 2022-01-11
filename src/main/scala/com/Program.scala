@@ -1,9 +1,13 @@
 package com
 
-import com.views.ZeppelinLauncher.createNote
+import com.data.RecoveredData._
 
 object Program {
   def main(args: Array[String]): Unit = {
-    createNote()
+    initializer()
+    val rec = ret_recovered_amt().asInstanceOf[Double]
+    closer()
+
+    println("US Recovered Patients: " + rec.toInt)
   }
 }
