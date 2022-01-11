@@ -31,7 +31,6 @@ class HiveDBC {
     import org.apache.log4j.{Level, Logger}
     params.foreach{Logger.getLogger(_).setLevel(Level.OFF)}
   }
-
   /**
    * This method returns the current spark session. If one does not exist, a new spark session is made.
    * @return spark: returns the new spark session as an instance of a SparkSession.
