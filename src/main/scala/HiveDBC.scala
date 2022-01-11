@@ -76,15 +76,9 @@ class HiveDBC {
    */
   protected def getEmployees(deleted: Boolean): Map[String, (String, Long, String, String, Boolean)] = {
     val spark = getSparkSession()
-    val employees = executeQuery(spark, s"SELECT * FROM users WHERE deleted == $deleted")
+    val employees = executeQuery(spark, s"SELECT * FROM employees WHERE deleted == $deleted")
     var employeesMap: Map[String, (String, Long, String, String, Boolean)] = Map[String, (String, Long, String, String, Boolean)]()
 
-    //If there are no employees, create an init root user.
-    if(!deleted && employees.count() == 0) {
-      val password = "password".sha256.hash
-      //Make an initial root users during set up, with admin == true and deleted == false
-      executeDML(spark, s"insert into employees values (8253, temp_name, temp_name,'root@rctp.com', '$password', true, false)")
-    }
     //Reads the employee information from the hive, and puts it in a map collection.
     employees.collect().foreach(row => {
       val employee_id = row.getLong(0)
@@ -98,6 +92,13 @@ class HiveDBC {
     employeesMap
   }
 
+  protected def getEmailDomain(): String = {
+    val spark = getSparkSession()
+    val employees = executeQuery(spark, s"SELECT email FROM employees WHERE employee_id = 8253")
+
+    employees.collect().head.getString(0).split('@')(1)
+  }
+
   /**
    * This method allows for users to be created. The created user will be added into the Hive database.
    * @param employee_id The employee's number in the system. (Primary Key)
@@ -108,7 +109,7 @@ class HiveDBC {
    * @param admin If set to true, the user will have admin privileges. Else, the user will be a basic user.
    */
   protected def createEmployee(employee_id: Long, first_name: String, last_name: String, email: String, password: String, admin: Boolean): Unit = {
-    executeDML(spark, s"insert into tempemployees values ($employee_id, '$first_name', '$last_name', '$email', '$password', $admin, false)")
+    executeDML(spark, s"insert into employees values ($employee_id, '$first_name', '$last_name', '$email', '$password', $admin, false)")
   }
 
   /**
