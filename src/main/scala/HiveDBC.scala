@@ -7,5 +7,4 @@ class HiveDBC {
     import org.apache.log4j.{Level, Logger}
     params.foreach{Logger.getLogger(_).setLevel(Level.OFF)}
   }
-
 }
