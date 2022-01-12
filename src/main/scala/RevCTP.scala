@@ -13,10 +13,24 @@ class RevCTP extends HiveDBC {
 
   protected def initializeAdmin(): Unit = {
     println("FIRST TIME USE> Please sign in with the default login to initialize your employee database.")
+
     print("FIRST TIME USE> Enter your desired email -> ")
-    val email = StdIn.readLine()
+    var email = StdIn.readLine()
+    while (!checkEmail(email)) {
+      print("FIRST TIME USE> Invalid email format (Ex. _@_._). Try again -> ")
+      email = StdIn.readLine()
+    }
+
     print("FIRST TIME USE> Enter the desired password -> ")
-    val password = StdIn.readLine().sha256.hash
+    var password = StdIn.readLine().sha256.hash
+    print("FIRST TIME USE> Retype in the desired password to confirm. -> ")
+    var conf_password = StdIn.readLine().sha256.hash
+    while(password != conf_password) {
+      print("FIRST TIME USE> Passwords do not match. Try entering in your password again -> ")
+      password = StdIn.readLine().sha256.hash
+      conf_password = StdIn.readLine().sha256.hash
+    }
+
     print("FIRST TIME USE> Enter your first name -> ")
     val first_name = StdIn.readLine()
     print("FIRST TIME USE> Enter your last name name -> ")
