@@ -1,5 +1,7 @@
 import scala.Console.{BOLD, GREEN, RED, RESET, print, println}
 import com.roundeights.hasher.Implicits._
+import com.tools.Router._
+import com.tools.HiveDBC
 import scala.io.StdIn
 
 class RevCTP extends HiveDBC {
@@ -110,8 +112,9 @@ class RevCTP extends HiveDBC {
     }
   }
 }
+
 object Main extends RevCTP {
-  def main(args:Array[String]): Unit = {
+  def main(args: Array[String]): Unit = {
     val rctp = new RevCTP()
     var currCommand = ""
 
@@ -122,7 +125,25 @@ object Main extends RevCTP {
     }
 
     do {
-      println("Enter in one of the following option numbers or type ':quit' to exit the program.")
+      println(
+        """Please Select A Menu Option
+          |
+          |1.) Recovery Rates Data
+          |2.) Mortality Rates Data
+          |3.) Infection Rates Data
+          |4.) Logout And Exit""".stripMargin)
+      currCommand = StdIn.readLine()
+
+      // Router Functions Based On Input
+      val router = currCommand match {
+        case "1" => recovery_data_route(rctp.spark)
+        case "2" => mortality_data_route()
+        case "3" => infection_data_route()
+        case "4" => println("Goodbye!")
+        case _ => println("Invalid Option")
+      }
+
+      /*println("Enter in one of the following option numbers or type ':quit' to exit the program.")
       println("Login/Logout")
       println("1. ")
       println("1. ")
@@ -130,10 +151,13 @@ object Main extends RevCTP {
       println("1. ")
       println("Settings")
       println(":quit")
-      print("> ")
-      currCommand = StdIn.readLine()
+      print("> ")*/
+      //currCommand = StdIn.readLine()
+    } while(currCommand != "4")
+  }
+}
 
-      if(currCommand == "Login/Logout") {
+      /*if(currCommand == "Login/Logout") {
         if(loggedIn)
           logout()
         else
@@ -154,6 +178,5 @@ object Main extends RevCTP {
         println("SYSTEM> Invalid Choice!")
       }
     } while(currCommand != ":quit")
-
   }
-}
+}*/

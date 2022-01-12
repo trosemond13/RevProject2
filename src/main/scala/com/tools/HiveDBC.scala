@@ -1,3 +1,5 @@
+package com.tools
+
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import com.roundeights.hasher.Implicits._
 
@@ -39,7 +41,7 @@ class HiveDBC {
   protected def getSparkSession(): SparkSession = {
     if(spark == null) {
       suppressLogs(List("org", "akka"))
-      System.setProperty("hadoop.home.dir", "C:\\hadoop")
+      //System.setProperty("hadoop.home.dir", "C:\\hadoop\\hadoop-3.3.0\\bin")
       spark = SparkSession
         .builder()
         .appName("RevProject2")
@@ -76,14 +78,14 @@ class HiveDBC {
    */
   protected def getEmployees(deleted: Boolean): Map[String, (String, Long, String, String, Boolean)] = {
     val spark = getSparkSession()
-    val employees = executeQuery(spark, s"SELECT * FROM users WHERE deleted == $deleted")
+    val employees = executeQuery(spark, s"SELECT * FROM employees WHERE deleted == $deleted")
     var employeesMap: Map[String, (String, Long, String, String, Boolean)] = Map[String, (String, Long, String, String, Boolean)]()
 
     //If there are no employees, create an init root user.
     if(!deleted && employees.count() == 0) {
       val password = "password".sha256.hash
       //Make an initial root users during set up, with admin == true and deleted == false
-      executeDML(spark, s"insert into employees values (8253, temp_name, temp_name,'root@rctp.com', '$password', true, false)")
+      executeDML(spark, s"insert into employees values (8253, 'temp_name', 'temp_name', 'root@rctp.com', '$password', true, false)")
     }
     //Reads the employee information from the hive, and puts it in a map collection.
     employees.collect().foreach(row => {

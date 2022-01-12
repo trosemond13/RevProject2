@@ -3,26 +3,14 @@ package com.data
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
 import org.apache.spark.sql.functions.col
 import scala.io.StdIn
+import com.tools.Router.dbCon
 
-object RecoveredData {
-  var con: SparkSession = null
-
-  def initializer(): Unit = {
-    con = SparkSession
-      .builder()
-      .appName("Covid")
-      .config("spark.master", "local")
-      .enableHiveSupport()
-      .getOrCreate()
-
-    con.sparkContext.setLogLevel("ERROR")
-  }
-
+object RecoveryData {
   def create_df(): DataFrame = {
-    val df = con.read.format("csv")
+    val df = dbCon.read.format("csv")
       .option("header", "true")
       .options(Map("inferSchema"->"true","delimiter"->","))
-      .load("D:\\Projects\\Proj30\\prod\\RevProject2\\KaggleData(Complete)\\KaggleData(Complete)\\covid_19_data_complete(Kaggle).csv")
+      .load("KaggleData(Complete)\\KaggleData(Complete)\\covid_19_data_complete(Kaggle).csv")
 
     return df
   }
@@ -38,9 +26,5 @@ object RecoveredData {
       .limit(1)
 
     return recNum.first()(1)
-  }
-
-  def closer(): Unit = {
-    con.close()
   }
 }
