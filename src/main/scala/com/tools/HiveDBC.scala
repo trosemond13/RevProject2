@@ -1,7 +1,6 @@
 package com.tools
 
 import org.apache.spark.sql.{DataFrame, SparkSession}
-import com.roundeights.hasher.Implicits._
 
 class HiveDBC {
   var spark: SparkSession = null
@@ -33,15 +32,14 @@ class HiveDBC {
     import org.apache.log4j.{Level, Logger}
     params.foreach{Logger.getLogger(_).setLevel(Level.OFF)}
   }
-
   /**
    * This method returns the current spark session. If one does not exist, a new spark session is made.
    * @return spark: returns the new spark session as an instance of a SparkSession.
    */
-  protected def getSparkSession(): SparkSession = {
+  protected def getSparkSession: SparkSession = {
     if(spark == null) {
       suppressLogs(List("org", "akka"))
-      //System.setProperty("hadoop.home.dir", "C:\\hadoop\\hadoop-3.3.0\\bin")
+      System.setProperty("hadoop.home.dir", "C:\\hadoop")
       spark = SparkSession
         .builder()
         .appName("RevProject2")
@@ -65,8 +63,8 @@ class HiveDBC {
    * not available in HIVE.
    * @return returns the next available employee number as an instance of a Long.
    */
-  protected def generateNewEmployeeID(): Long = {
-    val spark = getSparkSession()
+  protected def generateNewEmployeeID: Long = {
+    val spark = getSparkSession
     val employees = executeQuery(spark, "SELECT * FROM employees")
     employees.count() + 8253
   }
@@ -77,16 +75,10 @@ class HiveDBC {
    * @return employeesMap: returns the employee information as an instance of Map[String, (String, Long, String, String, Boolean)]
    */
   protected def getEmployees(deleted: Boolean): Map[String, (String, Long, String, String, Boolean)] = {
-    val spark = getSparkSession()
+    val spark = getSparkSession
     val employees = executeQuery(spark, s"SELECT * FROM employees WHERE deleted == $deleted")
     var employeesMap: Map[String, (String, Long, String, String, Boolean)] = Map[String, (String, Long, String, String, Boolean)]()
 
-    //If there are no employees, create an init root user.
-    if(!deleted && employees.count() == 0) {
-      val password = "password".sha256.hash
-      //Make an initial root users during set up, with admin == true and deleted == false
-      executeDML(spark, s"insert into employees values (8253, 'temp_name', 'temp_name', 'root@rctp.com', '$password', true, false)")
-    }
     //Reads the employee information from the hive, and puts it in a map collection.
     employees.collect().foreach(row => {
       val employee_id = row.getLong(0)
@@ -100,6 +92,13 @@ class HiveDBC {
     employeesMap
   }
 
+  protected def getEmailDomain: String = {
+    val spark = getSparkSession
+    val employees = executeQuery(spark, s"SELECT email FROM employees WHERE employee_id = 8253")
+
+    employees.collect().head.getString(0).split('@')(1)
+  }
+
   /**
    * This method allows for users to be created. The created user will be added into the Hive database.
    * @param employee_id The employee's number in the system. (Primary Key)
@@ -110,7 +109,7 @@ class HiveDBC {
    * @param admin If set to true, the user will have admin privileges. Else, the user will be a basic user.
    */
   protected def createEmployee(employee_id: Long, first_name: String, last_name: String, email: String, password: String, admin: Boolean): Unit = {
-    executeDML(spark, s"insert into tempemployees values ($employee_id, '$first_name', '$last_name', '$email', '$password', $admin, false)")
+    executeDML(spark, s"insert into employees values ($employee_id, '$first_name', '$last_name', '$email', '$password', $admin, false)")
   }
 
   /**
@@ -124,7 +123,7 @@ class HiveDBC {
    * @param admin If set to true, the user will have admin privileges. Else, the user will be a basic user.
    */
   protected def updateEmployeeInfo(terminate:Boolean, employee_id: Long, first_name: String, last_name: String, email: String, password: String, admin: Boolean): Unit = {
-    val spark = getSparkSession()
+    val spark = getSparkSession
     val employees = executeQuery(spark, s"SELECT * FROM employees WHERE employee_id != $employee_id")
     executeDML(spark, "CREATE TABLE tempemployees(employee_id Long, first_name String, last_name String, email String, password String, admin Boolean, deleted Boolean)")
 
