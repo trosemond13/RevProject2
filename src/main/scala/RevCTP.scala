@@ -1,24 +1,39 @@
-import scala.Console.{BOLD, GREEN, RED, RESET, print, println}
+import scala.Console.{BLUE, BOLD, RESET, print, println}
 import com.roundeights.hasher.Implicits._
-import com.tools.Router._
 import com.tools.HiveDBC
-import scala.io.StdIn
+
+import scala.io.{StdIn}
 
 class RevCTP extends HiveDBC {
   val SUCCESS: Int = 0
   val FAILURE: Int = 1
   val ERROR: Int = -1
   var employees: Map[String, (String, Long, String, String, Boolean)] = getEmployees(false)
-  val init: Boolean = if(employees.size == 0) false else true
+  val init: Boolean = if(employees.isEmpty) false else true
   var email: String = ""
   var loggedIn: Boolean = false
 
   protected def initializeAdmin(): Unit = {
     println("FIRST TIME USE> Please sign in with the default login to initialize your employee database.")
+
     print("FIRST TIME USE> Enter your desired email -> ")
-    val email = StdIn.readLine()
+    var email = StdIn.readLine()
+    while (!checkEmail(email)) {
+      print("FIRST TIME USE> Invalid email format (Ex. _@_._). Try again -> ")
+      email = StdIn.readLine()
+    }
+
     print("FIRST TIME USE> Enter the desired password -> ")
-    val password = StdIn.readLine().sha256.hash
+    var password = StdIn.readLine().sha256.hash
+    print("FIRST TIME USE> Retype in the desired password to confirm. -> ")
+    var conf_password = StdIn.readLine().sha256.hash
+    while(password != conf_password) {
+      print("FIRST TIME USE> Passwords do not match. Try entering in your password again -> ")
+      password = StdIn.readLine().sha256.hash
+      print("FIRST TIME USE> Retype in the desired password to confirm. -> ")
+      conf_password = StdIn.readLine().sha256.hash
+    }
+
     print("FIRST TIME USE> Enter your first name -> ")
     val first_name = StdIn.readLine()
     print("FIRST TIME USE> Enter your last name name -> ")
@@ -54,9 +69,9 @@ class RevCTP extends HiveDBC {
   }
   def logout(): Unit = {
     if(loggedIn) {
-      email = ""
       loggedIn = false
       println(s"SYSTEM> User with email <$email> has been logged out.")
+      email = ""
     } else {
       println("No user is logged in. Logout failed.")
     }
@@ -69,7 +84,7 @@ class RevCTP extends HiveDBC {
         super.createEmployee(employee_id, first_name, last_name, email, password, admin)
         println(s"Account with email <$email> has been successfully created.")
       } catch {
-        case _ => println(s"Account with email <$email> has not been created. Try again later.")
+        case _: Throwable => println(s"Account with email <$email> has not been created. Try again later.")
       }
     }
   }
@@ -111,72 +126,97 @@ class RevCTP extends HiveDBC {
       case _ => false
     }
   }
-}
+  def a(): Unit = {
+    println(
+      """Please Select A Menu Option
+        |
+        |1.) Update Account Information
+        |2.) Search Employee
+               """.stripMargin)
+   var currCommand = StdIn.readLine()
 
+    // Router Functions Based On Input
+    val router = currCommand match {
+      case "1" =>
+      case "2" =>
+      case "3" =>
+      case "4" => println("Goodbye!")
+      case _ => println("Invalid Option")
+    }
+  }
+  def getAdminStatus(email: String): Boolean = {
+    if(!employees.contains(email))
+      false
+    else
+      employees(email)._5
+  }
+  def quit: Unit = {
+    print("Exiting in 5 seconds. Syncing System.")
+    println("Exiting[....(5)]")
+    println("Exiting[...(4).]")
+    println("Exiting[..(3).]")
+    println("Exiting[.(2)...]")
+    println("Exiting[(1)....]")
+    println("Exiting Complete!")
+  }
+  def startRCTP(): Unit = println("startRCTP")
+  def printSettings(str: String) = println("settings")
+  def clearScreen: Unit = {
+    println()
+    println()
+    println()
+    println()
+    println()
+    println()
+    println()
+    println()
+    println()
+    println()
+    println()
+    println()
+    println()
+  }
+}
 object Main extends RevCTP {
-  def main(args: Array[String]): Unit = {
+  def main(args:Array[String]): Unit = {
     val rctp = new RevCTP()
     var currCommand = ""
+    var break = false
 
     println(s"SYSTEM> Welcome to the Revature Covid Tracker Planning app. We appreciate your subscription to our service.")
 
     if (!rctp.init) { //Initializes admin account if there are no users in the database
       initializeAdmin()
     }
-
     do {
-      println(
-        """Please Select A Menu Option
-          |
-          |1.) Recovery Rates Data
-          |2.) Mortality Rates Data
-          |3.) Infection Rates Data
-          |4.) Logout And Exit""".stripMargin)
-      currCommand = StdIn.readLine()
-
-      // Router Functions Based On Input
-      val router = currCommand match {
-        case "1" => recovery_data_route(rctp.spark)
-        case "2" => mortality_data_route()
-        case "3" => infection_data_route()
-        case "4" => println("Goodbye!")
-        case _ => println("Invalid Option")
+      println("MAIN MENU> Please select one of the following menu options.")
+      if(!loggedIn) {
+        println(
+          """|MAIN MENU> 1.) Login
+            |MAIN MENU> 2.) Quit""".stripMargin)
+      } else {
+        println(
+          """MAIN MENU> 1.) Logout
+            |MAIN MENU> 2.) StartRCTP
+            |MAIN MENU> 3.) Settings
+            |MAIN MENU> 4.) Quit Program""".stripMargin)
       }
+      if(getAdminStatus(email))
+        print(s"$BOLD$BLUE${email.split('@')(0).capitalize}$RESET> ")
+      else
+        print(s"${email.split('@')(0).capitalize}> ")
 
-      /*println("Enter in one of the following option numbers or type ':quit' to exit the program.")
-      println("Login/Logout")
-      println("1. ")
-      println("1. ")
-      println("1. ")
-      println("1. ")
-      println("Settings")
-      println(":quit")
-      print("> ")*/
-      //currCommand = StdIn.readLine()
-    } while(currCommand != "4")
+      currCommand = StdIn.readLine()
+      currCommand match {
+        case "1" => if (!loggedIn) login() else logout()
+        case "2" if !loggedIn => quit; break = true
+        case "2" => startRCTP()
+        case "3" if loggedIn && getAdminStatus(email) => printSettings(str = "admin")
+        case "3" if loggedIn => printSettings(str = "basic")
+        case "4" if loggedIn => quit; break = true
+        case _ => println("Invalid Option. Enter a valid number option."); currCommand += "!"
+      }
+      clearScreen
+    } while(!break)
   }
 }
-
-      /*if(currCommand == "Login/Logout") {
-        if(loggedIn)
-          logout()
-        else
-          login()
-      } else if(currCommand == "2") {
-        do {
-          print("> ")
-          val email = StdIn.readLine()
-          println(checkEmail(email))
-        } while(email != ":quit")
-      } else if(currCommand == "3") {
-
-      } else if(currCommand == ":quit") {
-        println("Quitting application!")
-      } else if(currCommand == "Settings") { //Will be used to view and/or update user information
-
-      } else {
-        println("SYSTEM> Invalid Choice!")
-      }
-    } while(currCommand != ":quit")
-  }
-}*/
