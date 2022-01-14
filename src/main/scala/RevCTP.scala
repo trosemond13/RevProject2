@@ -1,8 +1,10 @@
+import Main.{email, getAdminStatus}
+
 import scala.Console.{BLUE, BOLD, RESET, print, println}
 import com.roundeights.hasher.Implicits._
 import com.tools.HiveDBC
 
-import scala.io.{StdIn}
+import scala.io.StdIn
 
 class RevCTP extends HiveDBC {
   val SUCCESS: Int = 0
@@ -94,6 +96,7 @@ class RevCTP extends HiveDBC {
     var last_name = employees(email)._4
     var password = employees(email)._1
 
+
     if (!terminate_bool) {
       if (first_name_bool) {
         print("Enter the desired first name -> ")
@@ -159,8 +162,54 @@ class RevCTP extends HiveDBC {
     println("Exiting[(1)....]")
     println("Exiting Complete!")
   }
-  def startRCTP(): Unit = println("startRCTP")
-  def printSettings(str: String) = println("settings")
+  def startRCTP(): Unit = {
+    var break = false
+    do {
+      clearScreen
+      println(
+        """RCTP MENU> 1.) Recovery
+          |RCTP MENU> 2.) Death
+          |RCTP MENU> 3.) Confirmed
+          |RCTP MENU> 4.) Back to Main Menu""".stripMargin)
+
+      if(getAdminStatus(email))
+        print(s"$BOLD$BLUE${email.split('@')(0).capitalize}$RESET> ")
+      else
+        print(s"${email.split('@')(0).capitalize}> ")
+
+      StdIn.readLine() match {
+        case "1" => println("option 1")
+        case "2" => println("option 2")
+        case "3" => println("option 3")
+        case "4" => println("option 4")
+        case "quit" => break = true
+        case _ => println("Invalid Option. Enter a valid number option.")
+      }
+      clearScreen
+    } while (!break)
+  }
+  def settings(str: String) = {
+    var break = false
+    clearScreen
+    do {
+      println(
+        """SETTINGS MENU> 1.) Update Account Info.
+          |SETTINGS MENU> 2.) Check Version
+          |SETTINGS MENU> 3.) Back to Main Menu""".stripMargin)
+
+      if(getAdminStatus(email))
+        print(s"$BOLD$BLUE${email.split('@')(0).capitalize}$RESET> ")
+      else
+        print(s"${email.split('@')(0).capitalize}> ")
+
+      StdIn.readLine() match {
+        case "1" => println("option 1")
+        case "quit" => break = true
+        case _ => println("Invalid Option. Enter a valid number option.")
+      }
+      clearScreen
+    } while (!break)
+  }
   def clearScreen: Unit = {
     println()
     println()
@@ -208,11 +257,12 @@ object Main extends RevCTP {
 
       currCommand = StdIn.readLine()
       currCommand match {
-        case "1" => if (!loggedIn) login() else logout()
+        case "1" if !loggedIn => login()
+        case "1" if loggedIn => logout()
         case "2" if !loggedIn => quit; break = true
         case "2" => startRCTP()
-        case "3" if loggedIn && getAdminStatus(email) => printSettings(str = "admin")
-        case "3" if loggedIn => printSettings(str = "basic")
+        case "3" if loggedIn && getAdminStatus(email) => settings(str = "admin")
+        case "3" if loggedIn => settings(str = "basic")
         case "4" if loggedIn => quit; break = true
         case _ => println("Invalid Option. Enter a valid number option."); currCommand += "!"
       }
