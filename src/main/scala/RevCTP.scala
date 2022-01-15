@@ -213,17 +213,7 @@ class RevCTP extends HiveDBC {
   }
   def clearScreen: Unit = {
     println()
-    println()
-    println()
-    println()
-    println()
-    println()
-    println()
-    println()
-    println()
-    println()
-    println()
-    println()
+    print("\u001b[H")
     println()
   }
 }

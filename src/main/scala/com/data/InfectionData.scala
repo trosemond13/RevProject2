@@ -14,6 +14,7 @@ object InfectionData {
         |INFECTIONS MENU> 2.) Total US Infections
         |INFECTIONS MENU> 3.) Average Infections Per Week
         |INFECTIONS MENU> 4.) Return To Main""".stripMargin)
+    print(">")
     val infectionsSelector = StdIn.readLine()
 
     if(infectionsSelector == "1")
@@ -52,6 +53,7 @@ object InfectionData {
       WHERE Province_State NOT LIKE("%Princess%")
       GROUP BY Province_State ORDER BY Infections DESC
       """)show(Int.MaxValue, false)
+    StdIn.readLine()
   }
 
   // Breakdown Average Infection By State
@@ -64,6 +66,7 @@ object InfectionData {
       .orderBy(col("sum(Infections)").desc)
 
     avgByStateDf.show(Int.MaxValue, false)
+    StdIn.readLine()
   }
 
   // Average Weekly Infections By State
@@ -79,6 +82,7 @@ object InfectionData {
   // Overall US Infections
   def overall_infections(): Unit = {
     val overallDf = create_df().select(sum(col("5/29/21")))
-    println("\nTotal Confirmed Infections: \n" + overallDf.first()(0))
+    println("\nTotal US Confirmed Infections: \n" + overallDf.first()(0))
+    StdIn.readLine()
   }
 }

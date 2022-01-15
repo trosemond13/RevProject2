@@ -1,16 +1,11 @@
 package com.data
 
-//import org.apache.spark
 import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, DataFrameReader, Row, SQLContext, SparkSession, SQLImplicits}
 import org.apache.spark.{SparkConf, SparkContext}
 import scala.io.StdIn
-//import scala.util.parsing.json.JSON
-//import org.apache.spark.{rdd.RDD, SparkConf}
-//import org.apache.spark.SparkConf
 import org.apache.spark.sql.catalyst.dsl.expressions.StringToAttributeConversionHelper
 import org.apache.spark.sql.functions.{array, array_position, collect_set, explode, explode_outer, struct, to_json, typedLit}
-//import org.apache.spark.sql.SQLImplicits
 
 object MortalityData {
   /*def main(args: Array[String]): Unit = {
@@ -26,14 +21,11 @@ object MortalityData {
     // create a spark session
     // for Windows
     //System.setProperty("hadoop.home.dir", "C:\\winutils")
-
-
-
-
-
   }*/
+
   class DeathTable{
     private var spark: SparkSession = null
+
     def start_session(): Unit ={
       System.setProperty("hadoop.home.dir", "C:\\hadoop")
       spark = SparkSession
@@ -49,7 +41,6 @@ object MortalityData {
     private def createDeathTable(): DataFrame={
       var covidDeaths = spark.read.csv("KaggleData(Complete)/KaggleData(Complete)/time_series_covid_19_deaths_US_complete(Kaggle).csv")
       var headerDeaths = covidDeaths.first()
-
 
       covidDeaths = covidDeaths.withColumnRenamed("_c0", "UID")
       covidDeaths = covidDeaths.withColumnRenamed("_c1", "iso2")
@@ -131,6 +122,7 @@ object MortalityData {
       covidDeaths = covidDeaths.withColumn("Mid_April_2021", array("_c457", "_c458", "_c459","_c460","_c461", "_c462", "_c463", "_c464","_c465","_c466")).drop("_c457", "_c458", "_c459","_c460","_c461", "_c462", "_c463", "_c464","_c465","_c466")
       covidDeaths = covidDeaths.withColumn("Late_April_2021", array("_c467", "_c468", "_c469","_c470","_c471", "_c472", "_c473", "_c474","_c475","April_2021")).drop("_c467", "_c468", "_c469","_c470","_c471", "_c472", "_c473", "_c474","_c475")
       covidDeaths = covidDeaths.withColumn("Early_May_2021", array("_c477", "May_2021")).drop("_c477")
+
       return covidDeaths
     }
 

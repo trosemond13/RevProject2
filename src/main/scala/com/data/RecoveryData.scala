@@ -13,10 +13,11 @@ object RecoveryData {
         |RECOVERY MENU> 1.) US Total Recovered Patients
         |RECOVERY MENU> 2.) Recovered Patients By State
         |RECOVERY MENU> 3.) Return To Main""".stripMargin)
+    print(">")
     val recoverySelector = StdIn.readLine()
 
     if(recoverySelector == "1")
-    {println("\nPatients Recovered: " + return_recovered_amt().asInstanceOf[Double].toLong)}
+    {return_recovered_amt()}
     else if(recoverySelector == "2")
     {return_states_recovered()}
     else if(recoverySelector == "3")
@@ -54,10 +55,11 @@ object RecoveryData {
       GROUP BY ProvinceState ORDER BY ProvinceState
       """)
       .show(Int.MaxValue, false)
+    StdIn.readLine()
   }
 
   // Return Overall Recovered US Covid Patients
-  def return_recovered_amt(): Any = {
+  def return_recovered_amt(): Unit = {
     val ds = create_df().withColumn("TotalRecovered", col("Confirmed") - col("Deaths"))
 
     val recNum = ds.select(col("TotalRecovered"))
@@ -67,13 +69,7 @@ object RecoveryData {
         && col("Province/State").notEqual("Recovered"))
       .agg(sum(col("TotalRecovered")))
 
-    /*val recNum = ds.select(col("Province/State"), col("Recovered"), col("TotalRecovered"))
-    .filter(col("Country/Region") === "US"
-      && col("Province/State") === "Recovered"
-      && col("Recovered").notEqual(0.0))
-    .sort(col("Recovered").desc)
-    .limit(1)*/
-
-    return recNum.first()(0)
+    println("\nPatients Recovered: " + recNum.first()(0).asInstanceOf[Double].toLong)
+    StdIn.readLine()
   }
 }
