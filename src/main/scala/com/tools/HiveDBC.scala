@@ -39,7 +39,7 @@ class HiveDBC {
   protected def getSparkSession: SparkSession = {
     if(spark == null) {
       suppressLogs(List("org", "akka"))
-      System.setProperty("hadoop.home.dir", "C:\\hadoop")
+      //System.setProperty("hadoop.home.dir", "C:\\hadoop")
       spark = SparkSession
         .builder()
         .appName("RevProject2")

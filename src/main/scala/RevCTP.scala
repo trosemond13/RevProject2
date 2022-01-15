@@ -2,6 +2,7 @@ import Main.{email, getAdminStatus}
 
 import scala.Console.{BLUE, BOLD, RESET, print, println}
 import com.roundeights.hasher.Implicits._
+import com.tools.Router._
 import com.tools.HiveDBC
 
 import scala.io.StdIn
@@ -167,9 +168,9 @@ class RevCTP extends HiveDBC {
     do {
       clearScreen
       println(
-        """RCTP MENU> 1.) Recovery
-          |RCTP MENU> 2.) Death
-          |RCTP MENU> 3.) Confirmed
+        """RCTP MENU> 1.) Recoveries
+          |RCTP MENU> 2.) Deaths
+          |RCTP MENU> 3.) Confirmed Infections
           |RCTP MENU> 4.) Back to Main Menu""".stripMargin)
 
       if(getAdminStatus(email))
@@ -178,10 +179,10 @@ class RevCTP extends HiveDBC {
         print(s"${email.split('@')(0).capitalize}> ")
 
       StdIn.readLine() match {
-        case "1" => println("option 1")
+        case "1" => recovery_data_route()
         case "2" => println("option 2")
-        case "3" => println("option 3")
-        case "4" => println("option 4")
+        case "3" => infection_data_route()
+        case "4" => break = true
         case "quit" => break = true
         case _ => println("Invalid Option. Enter a valid number option.")
       }
@@ -233,6 +234,7 @@ object Main extends RevCTP {
     var break = false
 
     println(s"SYSTEM> Welcome to the Revature Covid Tracker Planning app. We appreciate your subscription to our service.")
+    dbCon = rctp.spark
 
     if (!rctp.init) { //Initializes admin account if there are no users in the database
       initializeAdmin()
