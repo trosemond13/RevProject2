@@ -2,6 +2,7 @@ package com.tools
 
 import com.data.RecoveryData.recovery_options_menu
 import com.data.InfectionData.infections_menu
+import com.data.MortalityData.mortality_menu
 import org.apache.spark.sql.SparkSession
 
 object Router {
@@ -16,6 +17,7 @@ object Router {
   // Pull Mortality Rate Data For US
   def mortality_data_route(): Unit = {
     println("\n\nUS Mortality Rate Data")
+    mortality_menu()
   }
 
   // Pull Infection Rate Data For US

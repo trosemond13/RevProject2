@@ -180,7 +180,7 @@ class RevCTP extends HiveDBC {
 
       StdIn.readLine() match {
         case "1" => recovery_data_route()
-        case "2" => println("option 2")
+        case "2" => mortality_data_route()
         case "3" => infection_data_route()
         case "4" => break = true
         case "quit" => break = true

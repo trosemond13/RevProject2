@@ -6,6 +6,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 import scala.io.StdIn
 import org.apache.spark.sql.catalyst.dsl.expressions.StringToAttributeConversionHelper
 import org.apache.spark.sql.functions.{array, array_position, collect_set, explode, explode_outer, struct, to_json, typedLit}
+import com.tools.Router.dbCon
 
 object MortalityData {
   /*def main(args: Array[String]): Unit = {
@@ -23,10 +24,36 @@ object MortalityData {
     //System.setProperty("hadoop.home.dir", "C:\\winutils")
   }*/
 
-  class DeathTable{
-    private var spark: SparkSession = null
+  def mortality_menu(): Unit = {
+    val new_session =new DeathTable()
+    new_session.spark = dbCon
+    new_session.establishTable()
 
-    def start_session(): Unit ={
+    println("""
+      |What Would You Like To See?
+      |MORTALITY MENU> 1.) Death Percentages By State
+      |MORTALITY MENU> 2.) Monthly Death Averages
+      |MORTALITY MENU> 3.) Spring or Summer Travel
+      |MORTALITY MENU> 4.) Return To Main""".stripMargin)
+    val mortalitySelector = StdIn.readLine()
+    new_session.displayTable()
+
+    if(mortalitySelector == "1")
+    {new_session.deathPercentageState()}
+    else if(mortalitySelector == "2")
+    {new_session.deathMonthlyAvg()}
+    else if(mortalitySelector == "3")
+    {new_session.springOrSummerTravel()}
+    else if(mortalitySelector == "4")
+    {println("Return To Main")}
+    else
+    {println("Invalid Selection")}
+  }
+
+  class DeathTable {
+    var spark: SparkSession = null
+
+    def start_session(): Unit = {
       System.setProperty("hadoop.home.dir", "C:\\hadoop")
       spark = SparkSession
         .builder
@@ -38,9 +65,9 @@ object MortalityData {
       //import spark.sqlContext.implicits._
     }
 
-    private def createDeathTable(): DataFrame={
+    private def createDeathTable(): DataFrame = {
       var covidDeaths = spark.read.csv("KaggleData(Complete)/KaggleData(Complete)/time_series_covid_19_deaths_US_complete(Kaggle).csv")
-      var headerDeaths = covidDeaths.first()
+      val headerDeaths = covidDeaths.first()
 
       covidDeaths = covidDeaths.withColumnRenamed("_c0", "UID")
       covidDeaths = covidDeaths.withColumnRenamed("_c1", "iso2")
@@ -73,7 +100,6 @@ object MortalityData {
       covidDeaths = covidDeaths.withColumnRenamed("_c478", "May_2021")
 
       covidDeaths = covidDeaths.filter(row => row != headerDeaths)
-
 
       covidDeaths = covidDeaths.withColumn("Late_January_2020", array("_c12", "_c13", "_c14","_c15","_c16", "_c17", "_c18", "_c19","_c20", "January_2020")).drop("_c12", "_c13", "_c14","_c15","_c16", "_c17", "_c18", "_c19","_c20")
       covidDeaths = covidDeaths.withColumn("Early_February_2020", array("_c22", "_c23", "_c24","_c25","_c26", "_c27", "_c28", "_c29","_c30", "_c31")).drop("_c22", "_c23", "_c24","_c25","_c26", "_c27", "_c28", "_c29","_c30", "_c31")
@@ -128,44 +154,45 @@ object MortalityData {
 
     //createDeathTable().show(false)
     //val sampleGetSomething = covidDeaths.withColumn("Result", array_position("Early_May_2021","107"))
-    def establishTable(): Unit={
+    def establishTable(): Unit = {
       createDeathTable().createOrReplaceTempView("CovidDeathsUS")
     }
+
     def showTables(): Unit = {
       spark.sql("show tables").show
     }
-    def displayTable(): Unit ={
+
+    def displayTable(): Unit = {
       spark.sql("Select * From CovidDeathsUs").show(false)
     }
 
-    def deathPercentageState(): Unit ={
+    def deathPercentageState(): Unit = {
       var sum = 0
       var totalUSDeath = 0
 
       print("Enter month to retrieve possible death information involving covid-19: \n>")
-      var monthCovid = StdIn.readLine()//TODO I/O
+      val monthCovid = StdIn.readLine()//TODO I/O
 
       print("Enter year to retrieve possible death information involving covid-19: \n>")
-      var yearCovid = StdIn.readLine()//TODO I/O
+      val yearCovid = StdIn.readLine()//TODO I/O
 
       print("Enter state name to retrieve possible death information involving covid-19: \n>")
-      var stateName = StdIn.readLine()//TODO I/O
+      val stateName = StdIn.readLine()//TODO I/O
 
-      var temp2 = spark.sql(s"Select ${monthCovid}_${yearCovid} From CovidDeathsUs Where Combined_Key like '%, $stateName, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
+      val temp2 = spark.sql(s"Select ${monthCovid}_${yearCovid} From CovidDeathsUs Where Combined_Key like '%, $stateName, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
 
       val temp2Num = temp2.count().toInt
       val t1 = temp2.take(temp2Num)
 
-      for(i<-0 to temp2Num-1){
+      for(i <- 0 until temp2Num) {
         sum = sum + t1(i).getString(0).toInt
-
-
       }
 
-      var restTemp = spark.sql(s"Select ${monthCovid}_${yearCovid} From CovidDeathsUs Where Admin2 != 'null' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
+      val restTemp = spark.sql(s"Select ${monthCovid}_${yearCovid} From CovidDeathsUs Where Admin2 != 'null' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
       val restTempNum = restTemp.count.toInt
       val r1 = restTemp.take(restTempNum)
-      for(i<-0 to restTempNum-1){
+
+      for(i <- 0 until restTempNum){
         totalUSDeath = totalUSDeath + r1(i).getString(0).toInt
       }
 
@@ -180,22 +207,23 @@ object MortalityData {
       }
     }
 
-    def deathMonthlyAvg(): Unit={
+    def deathMonthlyAvg(): Unit = {
       //Average death per month println statement here:
       var sumAvg = 0
+
       print("Enter month to retrieve the average possible death information involving covid-19: \n>")
-      var monthAvg = StdIn.readLine()//TODO I/O
+      val monthAvg = StdIn.readLine()//TODO I/O
 
       print("Enter year to retrieve the average possible death information involving covid-19: \n>")
-      var yearAvg = StdIn.readLine()//TODO I/O
+      val yearAvg = StdIn.readLine()//TODO I/O
 
       print("Enter state name to retrieve the average possible death information involving covid-19: \n>")
-      var stateNameAvg = StdIn.readLine()//TODO I/O
-      var avgStateDeath = spark.sql(s"Select ${monthAvg}_${yearAvg} From CovidDeathsUs Where Combined_Key like '%, $stateNameAvg, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
+      val stateNameAvg = StdIn.readLine()//TODO I/O
+      val avgStateDeath = spark.sql(s"Select ${monthAvg}_${yearAvg} From CovidDeathsUs Where Combined_Key like '%, $stateNameAvg, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
       val avgStateDeathCount = avgStateDeath.count.toInt
       val avgState1 = avgStateDeath.take(avgStateDeathCount)
 
-      for(i<-0 to avgStateDeathCount-1){
+      for(i <- 0 until avgStateDeathCount) {
         sumAvg = sumAvg + avgState1(i).getString(0).toInt
       }
 
@@ -205,64 +233,64 @@ object MortalityData {
 
     def springOrSummerTravel(): Unit = {
       print("Please select the state you want to compare for the spring and summer months of 2020: \n>")
-      var springSummerState = StdIn.readLine()//TODO I/O
+      val springSummerState = StdIn.readLine()//TODO I/O
       //Summer(June, July, August) of 2020 because only in 2020 are these months listed month deaths if need be is here:
       var summerTotal = 0
-      var summerMonthDFJune = spark.sql(s"Select June_2020 From CovidDeathsUS Where Combined_Key like '%, $springSummerState, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
-      var summerMonthDFJuly = spark.sql(s"Select July_2020 From CovidDeathsUS Where Combined_Key like '%, $springSummerState, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
-      var summerMonthDFAugust = spark.sql(s"Select August_2020 From CovidDeathsUS Where Combined_Key like '%, $springSummerState, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
+      val summerMonthDFJune = spark.sql(s"Select June_2020 From CovidDeathsUS Where Combined_Key like '%, $springSummerState, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
+      val summerMonthDFJuly = spark.sql(s"Select July_2020 From CovidDeathsUS Where Combined_Key like '%, $springSummerState, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
+      val summerMonthDFAugust = spark.sql(s"Select August_2020 From CovidDeathsUS Where Combined_Key like '%, $springSummerState, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
       val summerMonthCountJune = summerMonthDFJune.count.toInt
-      var summer1 = summerMonthDFJune.take(summerMonthCountJune)
+      val summer1 = summerMonthDFJune.take(summerMonthCountJune)
       val summerMonthCountJuly = summerMonthDFJuly.count.toInt
-      var summer2 = summerMonthDFJuly.take(summerMonthCountJuly)
+      val summer2 = summerMonthDFJuly.take(summerMonthCountJuly)
       val summerMonthCountAugust = summerMonthDFAugust.count.toInt
-      var summer3 = summerMonthDFAugust.take(summerMonthCountAugust)
+      val summer3 = summerMonthDFAugust.take(summerMonthCountAugust)
 
-      for(i<-0 to summerMonthCountJune-1){
+      for(i <- 0 until summerMonthCountJune) {
         summerTotal = summerTotal + summer1(i).getString(0).toInt
       }
-      for(i<-0 to summerMonthCountJuly-1){
+      for(i <- 0 until summerMonthCountJuly) {
         summerTotal = summerTotal + summer2(i).getString(0).toInt
       }
-      for(i<-0 to summerMonthCountAugust-1){
+      for(i<-0 until summerMonthCountAugust) {
         summerTotal = summerTotal + summer3(i).getString(0).toInt
       }
 
       //Spring month(March, April, May) of 2020 deaths if need be is here:
       var springTotal = 0
-      var springMonthMarchDF = spark.sql(s"Select March_2020 From CovidDeathsUS Where Combined_Key like '%, $springSummerState, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
-      var springMonthAprilDF = spark.sql(s"Select April_2020 From CovidDeathsUS Where Combined_Key like '%, $springSummerState, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
-      var springMonthMayDF = spark.sql(s"Select May_2020 From CovidDeathsUS Where Combined_Key like '%, $springSummerState, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
+      val springMonthMarchDF = spark.sql(s"Select March_2020 From CovidDeathsUS Where Combined_Key like '%, $springSummerState, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
+      val springMonthAprilDF = spark.sql(s"Select April_2020 From CovidDeathsUS Where Combined_Key like '%, $springSummerState, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
+      val springMonthMayDF = spark.sql(s"Select May_2020 From CovidDeathsUS Where Combined_Key like '%, $springSummerState, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
       val springMonthCountMarch = springMonthMarchDF.count.toInt
-      var spring1 = springMonthMarchDF.take(springMonthCountMarch)
+      val spring1 = springMonthMarchDF.take(springMonthCountMarch)
       val springMonthCountApril = springMonthAprilDF.count.toInt
       var spring2 = springMonthAprilDF.take(springMonthCountApril)
       val springMonthCountMay = springMonthMayDF.count.toInt
       var spring3 = springMonthMayDF.take(springMonthCountMay)
 
-      for(i<-0 to springMonthCountMarch-1){
+      for(i <- 0 until springMonthCountMarch){
         springTotal = springTotal + spring1(i).getString(0).toInt
       }
-      for(i<-0 to springMonthCountApril-1){
+      for(i <- 0 until springMonthCountApril){
         springTotal = springTotal + spring2(i).getString(0).toInt
       }
-      for(i<-0 to springMonthCountMay-1){
+      for(i <- 0 until springMonthCountMay){
         springTotal = springTotal + spring3(i).getString(0).toInt
       }
 
       //If statement to determine which months summer or spring months is higher is here:
-      var summerMonthsMore = summerTotal - springTotal
-      var springMonthsMore = springTotal - summerTotal
+      val summerMonthsMore = summerTotal - springTotal
+      val springMonthsMore = springTotal - summerTotal
 
-      if(summerTotal > springTotal){
+      if(summerTotal > springTotal) {
         println(s"It's safer to travel in the spring there are $summerMonthsMore more people who have died in the summer")
       }
-      else{
+      else {
         println(s"It's safer to travel in the summer there are $springMonthsMore more people who have died in the spring")
       }
     }
 
-    def closeDeathTable(): Unit ={
+    def closeDeathTable(): Unit = {
       spark.close()
     }
   }
