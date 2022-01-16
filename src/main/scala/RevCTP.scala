@@ -1,5 +1,3 @@
-import Main.{email, getAdminStatus}
-
 import scala.Console.{BLUE, BOLD, RESET, print, println}
 import com.roundeights.hasher.Implicits._
 import com.tools.HiveDBC
@@ -43,10 +41,11 @@ class RevCTP extends HiveDBC {
 
     createEmployee(employee_id = 8253, first_name, last_name, email, password, admin = true)
     employees += email -> (password, 8253, first_name, last_name, true)
-    print("SYSTEM> Admin account successfully initialized!")
+    clearScreen
   }
   def login(): Int = {
     var tries: Int = 3
+    clearScreen
     while(!loggedIn) {
       print(s"LOGIN MENU> Enter your email here -> ")
       email = StdIn.readLine().toLowerCase().trim
@@ -78,73 +77,84 @@ class RevCTP extends HiveDBC {
       println("No user is logged in. Logout failed.")
     }
   }
-  override def createEmployee(employee_id: Long, first_name: String, last_name: String, email: String, password: String, admin: Boolean): Unit = {
-    if(employees.contains(email)) {
-      println("SYSTEM> Email is already linked to an account.")
-    } else {
-      try {
-        super.createEmployee(employee_id, first_name, last_name, email, password, admin)
-        println(s"Account with email <$email> has been successfully created.")
-      } catch {
-        case _: Throwable => println(s"Account with email <$email> has not been created. Try again later.")
+  def createEmployee(): Unit = {
+    var tries = 2
+    print("CREATE ACCOUNT> Enter the email of the account you would like to create -> ")
+    var email = StdIn.readLine()
+    while((!checkEmail(email) || employees.contains(email)) && tries > 0) {
+      if(!checkEmail(email)) {
+        print("SYSTEM> Invalid email format (Ex. _@_._). Try again -> ")
+      }
+      if(employees.contains(email)) {
+        print("SYSTEM> Email is unavailable. Try another email -> ")
+      }
+      email = StdIn.readLine()
+      tries = tries - 1
+      if(tries == 0) {
+        println("SYSTEM> You have entered invalid input too many times. Returning to Settings menu.")
       }
     }
+    print("CREATE ACCOUNT> Enter a password for the account. -> ")
+    var password = StdIn.readLine().sha256.hash
+    print("CREATE ACCOUNT> Re-enter password to confirm. -> ")
+    var conf_password = StdIn.readLine().sha256.hash
+    while(password != conf_password) {
+      print("SYSTEM> Passwords do not match. Try entering in your password again -> ")
+      password = StdIn.readLine().sha256.hash
+      print("SYSTEM> Retype in the desired password to confirm. -> ")
+      conf_password = StdIn.readLine().sha256.hash
+    }
+    print("CREATE ACCOUNT> Enter the user's first name -> ")
+    val first_name = StdIn.readLine()
+    print("CREATE ACCOUNT> Enter the user's last name -> ")
+    val last_name = StdIn.readLine()
+    try {
+      val employee_id = generateNewEmployeeID
+      createEmployee(employee_id, first_name, last_name, email, password, admin = false)
+      employees += email -> (password, employee_id, first_name, last_name, false)
+      println(s"SYSTEM> <$email>'s account has successfully been created")
+    } catch {
+      case _ => println(s"SYSTEM> <$email>'s account has not been created. Please try again")
+    }
   }
-  def updateEmployeeInfo(terminate_bool: Boolean, first_name_bool: Boolean, last_name_bool: Boolean, email_bool: Boolean, password_bool: Boolean, admin_bool: Boolean): Unit = {
+  def updateEmployeeInfo(first_name_bool: Boolean, last_name_bool: Boolean, email_bool: Boolean, password_bool: Boolean): Unit = {
     val employee_id: Long = employees(email)._2
     var first_name: String = employees(email)._3
     var last_name = employees(email)._4
     var password = employees(email)._1
+    val admin = employees(email)._5
 
-
-    if (!terminate_bool) {
-      if (first_name_bool) {
-        print("Enter the desired first name -> ")
-        first_name = StdIn.readLine()
-      }
-      if (last_name_bool) {
-        print("Enter the desired last name -> ")
-        last_name = StdIn.readLine()
-      }
-      if (email_bool) {
-        print("Enter the desired user name -> ")
-        email = StdIn.readLine()
-      }
-      if (password_bool) {
-        print("Enter the desired password-> ")
-        password = StdIn.readLine().sha256.hash
-      }
-      employees += email -> (password, employee_id, first_name, last_name, admin_bool)
-    } else {
-      employees -= email
+    if (first_name_bool) {
+      print("SYSTEM> Enter the desired first name -> ")
+      first_name = StdIn.readLine()
     }
-    super.updateEmployeeInfo(terminate_bool, employee_id, first_name, last_name, email, password, admin_bool)
+    if (last_name_bool) {
+      print("SYSTEM> Enter the desired last name -> ")
+      last_name = StdIn.readLine()
+    }
+    if (email_bool) {
+      print("SYSTEM> Enter the desired user name -> ")
+      email = StdIn.readLine()
+    }
+    if (password_bool) {
+      print("MAIN/SETTINGS/UPDATE> Enter the desired password -> ")
+      password = StdIn.readLine().sha256.hash
+    }
+    if(first_name_bool || last_name_bool || email_bool || password_bool) {
+      employees += email -> (password, employee_id, first_name, last_name, admin)
+      super.updateEmployeeInfo(terminate = false, employee_id, first_name, last_name, email, password, admin)
+      println(s"SYSTEM> Your account information has been successfully updated.")
+    } else {
+      println(s"SYSTEM> You have not made any changes to your account.")
+    }
   }
   def checkEmail(e: String): Boolean = {
-    val emailRegex = """^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])+(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$""".r
+    val emailRegex = """^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])*(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$""".r
     e match {
       case null => false
       case e if e.trim.isEmpty => false
       case e if emailRegex.findFirstMatchIn(e).isDefined => true
       case _ => false
-    }
-  }
-  def a(): Unit = {
-    println(
-      """Please Select A Menu Option
-        |
-        |1.) Update Account Information
-        |2.) Search Employee
-               """.stripMargin)
-   var currCommand = StdIn.readLine()
-
-    // Router Functions Based On Input
-    val router = currCommand match {
-      case "1" =>
-      case "2" =>
-      case "3" =>
-      case "4" => println("Goodbye!")
-      case _ => println("Invalid Option")
     }
   }
   def getAdminStatus(email: String): Boolean = {
@@ -154,6 +164,7 @@ class RevCTP extends HiveDBC {
       employees(email)._5
   }
   def quit: Unit = {
+    clearScreen
     print("Exiting in 5 seconds. Syncing System.")
     println("Exiting[....(5)]")
     println("Exiting[...(4).]")
@@ -188,42 +199,131 @@ class RevCTP extends HiveDBC {
       clearScreen
     } while (!break)
   }
-  def settings(str: String) = {
+  def settings(status: String) = {
     var break = false
+    var first_name_change = false
+    var last_name_change = false
+    var email_change = false
+    var password_change = false
+
     clearScreen
     do {
-      println(
-        """SETTINGS MENU> 1.) Update Account Info.
-          |SETTINGS MENU> 2.) Check Version
-          |SETTINGS MENU> 3.) Back to Main Menu""".stripMargin)
-
-      if(getAdminStatus(email))
+      val deleted_employees = getEmployees(true)
+      println("SETTINGS MENU> Please select one of the following menu options.")
+      if(status == "admin") {
+        println(
+          """SETTINGS MENU> 1.) Update Account Info.
+            |SETTINGS MENU> 2.) Revoke/Reinstate Account Access.
+            |SETTINGS MENU> 3.) Grant/Revoke Admin Access.
+            |SETTINGS MENU> 4.) Create a basic account.
+            |SETTINGS MENU> 5.) Return to Main Menu""".stripMargin)
         print(s"$BOLD$BLUE${email.split('@')(0).capitalize}$RESET> ")
-      else
+      } else {
+        println(
+          """SETTINGS MENU> 1.) Update Account Info.
+            |SETTINGS MENU> 2.) Return to Main Menu.""".stripMargin)
         print(s"${email.split('@')(0).capitalize}> ")
-
-      StdIn.readLine() match {
-        case "1" => println("option 1")
-        case "quit" => break = true
-        case _ => println("Invalid Option. Enter a valid number option.")
       }
-      clearScreen
-    } while (!break)
+      val currOption = StdIn.readLine()
+      if (currOption == "1" ) {
+        clearScreen
+        print("UPDATE INFO> Would you like to update your first name? (y/_) -> ")
+        first_name_change = if (StdIn.readLine().toLowerCase == "y") true else false
+        print("UPDATE INFO> Would you like to update your last name? (y/_) -> ")
+        last_name_change = if (StdIn.readLine().toLowerCase == "y") true else false
+        print("UPDATE INFO> Would you like to update your email? (y/_) -> ")
+        email_change = if (StdIn.readLine().toLowerCase == "y") true else false
+        print("UPDATE INFO> Would you like to update your password? (y/_) -> ")
+        password_change = if (StdIn.readLine().toLowerCase == "y") true else false
+        updateEmployeeInfo(first_name_change, last_name_change, email_change, password_change)
+        clearScreen
+      } else if (currOption == "2" && status != "admin") {
+        break = true
+      } else if (currOption == "2") {
+        clearScreen
+        print("UPDATE ACCESS> Enter the email of the account you would like to revoke/reinstate app access -> ")
+        var email_in = StdIn.readLine()
+        var tries = 2
+        while ((email_in == email || (!employees.contains(email_in) && !deleted_employees.contains(email_in))) && tries > 0) {
+          if(email_in == email) {
+            print(s"SYSTEM> Permission denied. You cannot revoke your own account access. Try another email ($tries more tries left) -> ")
+          }
+          if (!employees.contains(email_in)) {
+            print(s"SYSTEM> Permission denied. Employee does not exist. Try again ($tries more tries left) -> ")
+          }
+          email_in = StdIn.readLine()
+          if(tries == 0) {
+            println("SYSTEM> You have entered invalid input too many times. Returning to Settings menu.")
+          }
+          tries = tries - 1
+        }
+        if(deleted_employees.contains(email_in)) {
+          val employee_id = deleted_employees(email_in)._2
+          val first_name = deleted_employees(email_in)._3
+          val last_name = deleted_employees(email_in)._4
+          val password = deleted_employees(email_in)._1
+          updateEmployeeInfo(terminate = false, employee_id, first_name, last_name, email_in, password, admin = false)
+          employees += email_in -> (password, employee_id, first_name, last_name, false)
+          println(s"SYSTEM> Permission Granted. <$email_in>'s account access has been revoked!")
+        } else if(employees.contains(email_in)) {
+          val employee_id = employees(email_in)._2
+          val first_name = employees(email_in)._3
+          val last_name = employees(email_in)._4
+          val password = employees(email_in)._1
+          updateEmployeeInfo(terminate = true, employee_id, first_name, last_name, email_in, password, admin = false)
+          employees -= email
+          println(s"SYSTEM> Permission Granted. <$email_in>'s account access has been reinstated!")
+        }
+        clearScreen
+      } else if(currOption == "3" && status == "admin") {
+        clearScreen
+        print("UPDATE ADMIN ACCESS> Enter the email of the account you would like to grant/revoke admin access -> ")
+        var email_in = StdIn.readLine()
+        var tries = 2
+        while ((email_in == email || (!employees.contains(email_in) && !deleted_employees.contains(email_in))) && tries > 0) {
+          if (email_in == email) {
+            print(s"SYSTEM> Permission denied. You cannot revoke your own admin access. Try another email ($tries more tries left) -> ")
+          }
+          if (!employees.contains(email_in)) {
+            print(s"SYSTEM> Permission denied. Employee does not exist. Try again ($tries more tries left) -> ")
+          }
+          email_in = StdIn.readLine()
+          if (tries == 0) {
+            println("SYSTEM> You have entered invalid input too many times. Returning to Settings menu.")
+          }
+          tries = tries - 1
+        }
+        if(employees.contains(email_in)) {
+          val employee_id = employees(email_in)._2
+          val first_name = employees(email_in)._3
+          val last_name = employees(email_in)._4
+          val password = employees(email_in)._1
+          if (employees(email_in)._5) {
+            updateEmployeeInfo(terminate = false, employee_id, first_name, last_name, email_in, password, admin = false)
+            println(s"SYSTEM> Permission Granted. <$email>'s account has gained admin privileges.")
+          } else {
+            updateEmployeeInfo(terminate = false, employee_id, first_name, last_name, email_in, password, admin = true)
+            println(s"SYSTEM> Permission Granted. <$email>'s admin privileges has been revoked.")
+          }
+        }
+        clearScreen
+      } else if (currOption == "4" && status == "admin") {
+        clearScreen
+        createEmployee()
+        clearScreen
+      } else if(currOption == "5" && status == "admin") {
+        break = true
+      } else {
+        println("SYSTEM> Invalid Option. Enter a valid number option.")
+        clearScreen
+      }
+    } while(!break)
   }
   def clearScreen: Unit = {
-    println()
-    println()
-    println()
-    println()
-    println()
-    println()
-    println()
-    println()
-    println()
-    println()
-    println()
-    println()
-    println()
+    println("============================================================================================================================")
+    println("-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_")
+    println("============================================================================================================================")
+
   }
 }
 object Main extends RevCTP {
@@ -242,7 +342,7 @@ object Main extends RevCTP {
       if(!loggedIn) {
         println(
           """|MAIN MENU> 1.) Login
-            |MAIN MENU> 2.) Quit""".stripMargin)
+             |MAIN MENU> 2.) Quit""".stripMargin)
       } else {
         println(
           """MAIN MENU> 1.) Logout
@@ -261,8 +361,8 @@ object Main extends RevCTP {
         case "1" if loggedIn => logout()
         case "2" if !loggedIn => quit; break = true
         case "2" => startRCTP()
-        case "3" if loggedIn && getAdminStatus(email) => settings(str = "admin")
-        case "3" if loggedIn => settings(str = "basic")
+        case "3" if loggedIn && getAdminStatus(email) => settings(status = "admin")
+        case "3" if loggedIn => settings(status = "basic")
         case "4" if loggedIn => quit; break = true
         case _ => println("Invalid Option. Enter a valid number option."); currCommand += "!"
       }
