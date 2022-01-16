@@ -94,27 +94,29 @@ class RevCTP extends HiveDBC {
         println("SYSTEM> You have entered invalid input too many times. Returning to Settings menu.")
       }
     }
-    print("CREATE ACCOUNT> Enter a password for the account. -> ")
-    var password = StdIn.readLine().sha256.hash
-    print("CREATE ACCOUNT> Re-enter password to confirm. -> ")
-    var conf_password = StdIn.readLine().sha256.hash
-    while(password != conf_password) {
-      print("SYSTEM> Passwords do not match. Try entering in your password again -> ")
-      password = StdIn.readLine().sha256.hash
-      print("SYSTEM> Retype in the desired password to confirm. -> ")
-      conf_password = StdIn.readLine().sha256.hash
-    }
-    print("CREATE ACCOUNT> Enter the user's first name -> ")
-    val first_name = StdIn.readLine()
-    print("CREATE ACCOUNT> Enter the user's last name -> ")
-    val last_name = StdIn.readLine()
-    try {
-      val employee_id = generateNewEmployeeID
-      createEmployee(employee_id, first_name, last_name, email, password, admin = false)
-      employees += email -> (password, employee_id, first_name, last_name, false)
-      println(s"SYSTEM> <$email>'s account has successfully been created")
-    } catch {
-      case _ => println(s"SYSTEM> <$email>'s account has not been created. Please try again")
+    if(tries > 0) {
+      print("CREATE ACCOUNT> Enter a password for the account. -> ")
+      var password = StdIn.readLine().sha256.hash
+      print("CREATE ACCOUNT> Re-enter password to confirm. -> ")
+      var conf_password = StdIn.readLine().sha256.hash
+      while (password != conf_password) {
+        print("SYSTEM> Passwords do not match. Try entering in your password again -> ")
+        password = StdIn.readLine().sha256.hash
+        print("SYSTEM> Retype in the desired password to confirm. -> ")
+        conf_password = StdIn.readLine().sha256.hash
+      }
+      print("CREATE ACCOUNT> Enter the user's first name -> ")
+      val first_name = StdIn.readLine()
+      print("CREATE ACCOUNT> Enter the user's last name -> ")
+      val last_name = StdIn.readLine()
+      try {
+        val employee_id = generateNewEmployeeID
+        createEmployee(employee_id, first_name, last_name, email, password, admin = false)
+        employees += email -> (password, employee_id, first_name, last_name, false)
+        println(s"SYSTEM> <$email>'s account has successfully been created")
+      } catch {
+        case _ => println(s"SYSTEM> <$email>'s account has not been created. Please try again")
+      }
     }
   }
   def updateEmployeeInfo(first_name_bool: Boolean, last_name_bool: Boolean, email_bool: Boolean, password_bool: Boolean): Unit = {
@@ -149,7 +151,7 @@ class RevCTP extends HiveDBC {
     }
   }
   def checkEmail(e: String): Boolean = {
-    val emailRegex = """^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])*(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$""".r
+    val emailRegex = """^[a-zA-Z0-9.{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])*(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$""".r
     e match {
       case null => false
       case e if e.trim.isEmpty => false
