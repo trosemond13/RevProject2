@@ -4,6 +4,7 @@ import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructT
 import org.apache.spark.sql.{DataFrame, DataFrameReader, Row, SQLContext, SparkSession, SQLImplicits}
 import org.apache.spark.{SparkConf, SparkContext}
 import scala.io.StdIn
+import scala.io.AnsiColor.{UNDERLINED, RESET}
 import org.apache.spark.sql.catalyst.dsl.expressions.StringToAttributeConversionHelper
 import org.apache.spark.sql.functions.{array, array_position, collect_set, explode, explode_outer, struct, to_json, typedLit}
 import com.tools.Router.dbCon
@@ -29,8 +30,11 @@ object MortalityData {
     new_session.spark = dbCon
     new_session.establishTable()
 
-    println("""
+    println(s"""
+      |${UNDERLINED}Recovery Data Menu${RESET}
+      |
       |What Would You Like To See?
+      |---------------------------
       |MORTALITY MENU> 1.) Death Percentages By State
       |MORTALITY MENU> 2.) Monthly Death Averages
       |MORTALITY MENU> 3.) Spring or Summer Travel
@@ -179,31 +183,36 @@ object MortalityData {
       print("Enter state name to retrieve possible death information involving covid-19: \n>")
       val stateName = StdIn.readLine()//TODO I/O
 
-      val temp2 = spark.sql(s"Select ${monthCovid}_${yearCovid} From CovidDeathsUs Where Combined_Key like '%, $stateName, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
+      try {
+        val temp2 = spark.sql(s"Select ${monthCovid}_${yearCovid} From CovidDeathsUs Where Combined_Key like '%, $stateName, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
 
-      val temp2Num = temp2.count().toInt
-      val t1 = temp2.take(temp2Num)
+        val temp2Num = temp2.count().toInt
+        val t1 = temp2.take(temp2Num)
 
-      for(i <- 0 until temp2Num) {
-        sum = sum + t1(i).getString(0).toInt
+        for (i <- 0 until temp2Num) {
+          sum = sum + t1(i).getString(0).toInt
+        }
+
+        val restTemp = spark.sql(s"Select ${monthCovid}_${yearCovid} From CovidDeathsUs Where Admin2 != 'null' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
+        val restTempNum = restTemp.count.toInt
+        val r1 = restTemp.take(restTempNum)
+
+        for (i <- 0 until restTempNum) {
+          totalUSDeath = totalUSDeath + r1(i).getString(0).toInt
+        }
+
+        val percentageState = ((sum.toFloat / totalUSDeath).toDouble)
+        val percentageStateVal = percentageState * 100
+
+        println("The percentage is: ")
+        println(f"$percentageStateVal%.2f" + "%")
+
+        if (percentageState < 0.05) {
+          println("This state is safe to travel to and from")
+        }
       }
-
-      val restTemp = spark.sql(s"Select ${monthCovid}_${yearCovid} From CovidDeathsUs Where Admin2 != 'null' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
-      val restTempNum = restTemp.count.toInt
-      val r1 = restTemp.take(restTempNum)
-
-      for(i <- 0 until restTempNum){
-        totalUSDeath = totalUSDeath + r1(i).getString(0).toInt
-      }
-
-      val percentageState  = ((sum.toFloat/totalUSDeath).toDouble)
-      val percentageStateVal = percentageState * 100
-
-      println("The percentage is: ")
-      println(f"$percentageStateVal%.2f" + "%")
-
-      if(percentageState < 0.05){
-        println("This state is safe to travel to and from")
+      catch {
+        case e => println("Invalid Selection")
       }
     }
 
@@ -212,23 +221,29 @@ object MortalityData {
       var sumAvg = 0
 
       print("Enter month to retrieve the average possible death information involving covid-19: \n>")
-      val monthAvg = StdIn.readLine()//TODO I/O
+      val monthAvg = StdIn.readLine() //TODO I/O
 
       print("Enter year to retrieve the average possible death information involving covid-19: \n>")
-      val yearAvg = StdIn.readLine()//TODO I/O
+      val yearAvg = StdIn.readLine() //TODO I/O
 
       print("Enter state name to retrieve the average possible death information involving covid-19: \n>")
-      val stateNameAvg = StdIn.readLine()//TODO I/O
-      val avgStateDeath = spark.sql(s"Select ${monthAvg}_${yearAvg} From CovidDeathsUs Where Combined_Key like '%, $stateNameAvg, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
-      val avgStateDeathCount = avgStateDeath.count.toInt
-      val avgState1 = avgStateDeath.take(avgStateDeathCount)
+      val stateNameAvg = StdIn.readLine() //TODO I/O
 
-      for(i <- 0 until avgStateDeathCount) {
-        sumAvg = sumAvg + avgState1(i).getString(0).toInt
+      try {
+        val avgStateDeath = spark.sql(s"Select ${monthAvg}_${yearAvg} From CovidDeathsUs Where Combined_Key like '%, $stateNameAvg, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
+        val avgStateDeathCount = avgStateDeath.count.toInt
+        val avgState1 = avgStateDeath.take(avgStateDeathCount)
+
+        for (i <- 0 until avgStateDeathCount) {
+          sumAvg = sumAvg + avgState1(i).getString(0).toInt
+        }
+
+        val averageStateMonth = sumAvg.toFloat / avgStateDeathCount
+        println(s"The state of $stateNameAvg in the month of $monthAvg $yearAvg was on average $averageStateMonth of possible Covid-19 Deaths")
       }
-
-      val averageStateMonth = sumAvg.toFloat/avgStateDeathCount
-      println(s"The state of $stateNameAvg in the month of $monthAvg $yearAvg was on average $averageStateMonth of possible Covid-19 Deaths")
+      catch {
+        case e => println("Invalid Selection")
+      }
     }
 
     def springOrSummerTravel(): Unit = {

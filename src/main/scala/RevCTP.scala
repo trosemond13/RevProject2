@@ -4,7 +4,6 @@ import scala.Console.{BLUE, BOLD, RESET, print, println}
 import com.roundeights.hasher.Implicits._
 import com.tools.Router._
 import com.tools.HiveDBC
-
 import scala.io.StdIn
 
 class RevCTP extends HiveDBC {
@@ -44,8 +43,10 @@ class RevCTP extends HiveDBC {
 
     createEmployee(employee_id = 8253, first_name, last_name, email, password, admin = true)
     employees += email -> (password, 8253, first_name, last_name, true)
+
     print("SYSTEM> Admin account successfully initialized!")
   }
+
   def login(): Int = {
     var tries: Int = 3
     while(!loggedIn) {
@@ -70,6 +71,7 @@ class RevCTP extends HiveDBC {
     }
     FAILURE
   }
+
   def logout(): Unit = {
     if(loggedIn) {
       loggedIn = false
@@ -79,6 +81,7 @@ class RevCTP extends HiveDBC {
       println("No user is logged in. Logout failed.")
     }
   }
+
   override def createEmployee(employee_id: Long, first_name: String, last_name: String, email: String, password: String, admin: Boolean): Unit = {
     if(employees.contains(email)) {
       println("SYSTEM> Email is already linked to an account.")
@@ -91,6 +94,7 @@ class RevCTP extends HiveDBC {
       }
     }
   }
+
   def updateEmployeeInfo(terminate_bool: Boolean, first_name_bool: Boolean, last_name_bool: Boolean, email_bool: Boolean, password_bool: Boolean, admin_bool: Boolean): Unit = {
     val employee_id: Long = employees(email)._2
     var first_name: String = employees(email)._3
@@ -121,6 +125,7 @@ class RevCTP extends HiveDBC {
     }
     super.updateEmployeeInfo(terminate_bool, employee_id, first_name, last_name, email, password, admin_bool)
   }
+
   def checkEmail(e: String): Boolean = {
     val emailRegex = """^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])+(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$""".r
     e match {
@@ -130,6 +135,7 @@ class RevCTP extends HiveDBC {
       case _ => false
     }
   }
+
   def a(): Unit = {
     println(
       """Please Select A Menu Option
@@ -137,7 +143,7 @@ class RevCTP extends HiveDBC {
         |1.) Update Account Information
         |2.) Search Employee
                """.stripMargin)
-   var currCommand = StdIn.readLine()
+   val currCommand = StdIn.readLine()
 
     // Router Functions Based On Input
     val router = currCommand match {
@@ -148,12 +154,14 @@ class RevCTP extends HiveDBC {
       case _ => println("Invalid Option")
     }
   }
+
   def getAdminStatus(email: String): Boolean = {
     if(!employees.contains(email))
       false
     else
       employees(email)._5
   }
+
   def quit: Unit = {
     print("Exiting in 5 seconds. Syncing System.")
     println("Exiting[....(5)]")
@@ -163,6 +171,7 @@ class RevCTP extends HiveDBC {
     println("Exiting[(1)....]")
     println("Exiting Complete!")
   }
+
   def startRCTP(): Unit = {
     var break = false
     do {
@@ -186,9 +195,11 @@ class RevCTP extends HiveDBC {
         case "quit" => break = true
         case _ => println("Invalid Option. Enter a valid number option.")
       }
+
       clearScreen
     } while (!break)
   }
+
   def settings(str: String) = {
     var break = false
     clearScreen
@@ -211,12 +222,14 @@ class RevCTP extends HiveDBC {
       clearScreen
     } while (!break)
   }
+
   def clearScreen: Unit = {
     println()
     print("\u001b[H")
     println()
   }
 }
+
 object Main extends RevCTP {
   def main(args:Array[String]): Unit = {
     val rctp = new RevCTP()
@@ -258,6 +271,7 @@ object Main extends RevCTP {
         case "4" if loggedIn => quit; break = true
         case _ => println("Invalid Option. Enter a valid number option."); currCommand += "!"
       }
+
       clearScreen
     } while(!break)
   }

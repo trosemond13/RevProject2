@@ -3,13 +3,17 @@ package com.data
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
 import org.apache.spark.sql.functions._
 import scala.io.StdIn
+import scala.io.AnsiColor.{RESET, UNDERLINED}
 import com.tools.Router.dbCon
 
 object RecoveryData {
   // Sub Menu For Recovery Data
   def recovery_options_menu(): Unit = {
-    println("""
+    println(s"""
+        |${UNDERLINED}Recovery Data Menu${RESET}
+        |
         |What Would You Like To See?
+        |---------------------------
         |RECOVERY MENU> 1.) US Total Recovered Patients
         |RECOVERY MENU> 2.) Recovered Patients By State
         |RECOVERY MENU> 3.) Return To Main""".stripMargin)
@@ -45,6 +49,8 @@ object RecoveryData {
 
     ds.createOrReplaceTempView("StatesList")
 
+    println("\nRecovery Rates By State\n")
+
     dbCon.sql(
       """
       SELECT ProvinceState, CAST((Max(Confirmed) - Max(Deaths)) AS INT) AS PatientsRecovered FROM StatesList
@@ -53,8 +59,9 @@ object RecoveryData {
         AND ProvinceState != 'US'
         AND ProvinceState != 'Recovered'
       GROUP BY ProvinceState ORDER BY ProvinceState
-      """)
-      .show(Int.MaxValue, false)
+      """).show(Int.MaxValue, false)
+
+    print("Enter Any Key To Return")
     StdIn.readLine()
   }
 
@@ -70,6 +77,8 @@ object RecoveryData {
       .agg(sum(col("TotalRecovered")))
 
     println("\nPatients Recovered: " + recNum.first()(0).asInstanceOf[Double].toLong)
+
+    print("Enter Any Key To Return")
     StdIn.readLine()
   }
 }
