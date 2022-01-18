@@ -7,27 +7,33 @@ import scala.io.AnsiColor.{RESET, UNDERLINED}
 import com.tools.Router.dbCon
 
 object RecoveryData {
+  var isFinishedR = false
+
   // Sub Menu For Recovery Data
   def recovery_options_menu(): Unit = {
-    println(s"""
-        |${UNDERLINED}Recovery Data Menu${RESET}
-        |
-        |What Would You Like To See?
-        |---------------------------
-        |RECOVERY MENU> 1.) US Total Recovered Patients
-        |RECOVERY MENU> 2.) Recovered Patients By State
-        |RECOVERY MENU> 3.) Return To Main""".stripMargin)
-    print(">")
-    val recoverySelector = StdIn.readLine()
+    while(!isFinishedR) {
+      println(s"""
+                 |${UNDERLINED}Recovery Data Menu${RESET}
+                 |
+                 |What Would You Like To See?
+                 |---------------------------
+                 |RECOVERY MENU> 1.) US Total Recovered Patients
+                 |RECOVERY MENU> 2.) Recovered Patients By State
+                 |RECOVERY MENU> 3.) Return To Main""".stripMargin)
+      print(">")
+      val recoverySelector = StdIn.readLine()
 
-    if(recoverySelector == "1")
-    {return_recovered_amt()}
-    else if(recoverySelector == "2")
-    {return_states_recovered()}
-    else if(recoverySelector == "3")
-    {println("Return To Main")}
-    else
-    {println("Invalid Option")}
+      if(recoverySelector == "1")
+      {return_recovered_amt()}
+      else if(recoverySelector == "2")
+      {return_states_recovered()}
+      else if(recoverySelector == "3") {
+        println("Return To Main")
+        isFinishedR = true
+      }
+      else
+      {println("Invalid Option")}
+    }
   }
 
   // Create DataFrame From Complete Kaggle CSV

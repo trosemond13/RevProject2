@@ -30,28 +30,34 @@ object MortalityData {
     new_session.spark = dbCon
     new_session.establishTable()
 
-    println(s"""
-      |${UNDERLINED}Recovery Data Menu${RESET}
-      |
-      |What Would You Like To See?
-      |---------------------------
-      |MORTALITY MENU> 1.) Death Percentages By State
-      |MORTALITY MENU> 2.) Monthly Death Averages
-      |MORTALITY MENU> 3.) Spring or Summer Travel
-      |MORTALITY MENU> 4.) Return To Main""".stripMargin)
-    val mortalitySelector = StdIn.readLine()
-    new_session.displayTable()
+    var isFinishedD = false
 
-    if(mortalitySelector == "1")
-    {new_session.deathPercentageState()}
-    else if(mortalitySelector == "2")
-    {new_session.deathMonthlyAvg()}
-    else if(mortalitySelector == "3")
-    {new_session.springOrSummerTravel()}
-    else if(mortalitySelector == "4")
-    {println("Return To Main")}
-    else
-    {println("Invalid Selection")}
+    while(!isFinishedD) {
+      println(s"""
+                 |${UNDERLINED}Mortality Data Menu${RESET}
+                 |
+                 |What Would You Like To See?
+                 |---------------------------
+                 |MORTALITY MENU> 1.) Death Percentages By State
+                 |MORTALITY MENU> 2.) Monthly Death Averages
+                 |MORTALITY MENU> 3.) Spring or Summer Travel
+                 |MORTALITY MENU> 4.) Return To Main""".stripMargin)
+      val mortalitySelector = StdIn.readLine()
+      new_session.displayTable()
+
+      if(mortalitySelector == "1")
+      {new_session.deathPercentageState()}
+      else if(mortalitySelector == "2")
+      {new_session.deathMonthlyAvg()}
+      else if(mortalitySelector == "3")
+      {new_session.springOrSummerTravel()}
+      else if(mortalitySelector == "4") {
+        println("Return To Main")
+        isFinishedD = true
+      }
+      else
+      {println("Invalid Selection")}
+    }
   }
 
   class DeathTable {
