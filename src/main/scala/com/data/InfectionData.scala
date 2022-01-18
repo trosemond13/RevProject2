@@ -1,9 +1,13 @@
 package com.data
 
+import com.Main.promptMessage
+
 import scala.io.StdIn
 import com.tools.Router.dbCon
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
+
+import scala.Console.print
 import scala.io.AnsiColor.{RESET, UNDERLINED}
 
 object InfectionData {
@@ -13,15 +17,14 @@ object InfectionData {
   def infections_menu(): Unit = {
     while(!isFinishedI) {
       println(s"""
-                 |${UNDERLINED}Infection Data Menu${RESET}
+                 |${UNDERLINED}MAIN/START RCTP/Infection Data Menu: Please select one of the following menu options.${RESET}
                  |
-                 |What Would You Like To See?
-                 |---------------------------
-                 |INFECTIONS MENU> 1.) Highest Infection Rates By State
-                 |INFECTIONS MENU> 2.) Total US Infections
-                 |INFECTIONS MENU> 3.) Average Infections Per Week
-                 |INFECTIONS MENU> 4.) Return To Main""".stripMargin)
-      print(">")
+                 |--> 1.) Highest Infection Rates By State
+                 |--> 2.) Total US Infections
+                 |--> 3.) Average Infections Per Week
+                 |--> 4.) Average Infections Per Week Per State
+                 |--> 5.) Return To Main""".stripMargin)
+      promptMessage()
       val infectionsSelector = StdIn.readLine()
 
       if(infectionsSelector == "1")
@@ -30,8 +33,9 @@ object InfectionData {
       {overall_infections()}
       else if(infectionsSelector == "3")
       {average_weekly_infections()}
-      else if(infectionsSelector == "4") {
-        println("Return To Main")
+      else if (infectionsSelector == "4")
+      {week_by_state()}
+      else if(infectionsSelector == "5") {
         isFinishedI = true
       }
       else
@@ -46,7 +50,7 @@ object InfectionData {
       .options(Map("inferSchema"->"true","delimiter"->","))
       .load("KaggleData(Complete)\\KaggleData(Complete)\\time_series_covid_19_confirmed_US_complete(Kaggle).csv")
 
-    return df
+    df
   }
 
   // Rank All States By Infection Numbers
@@ -91,7 +95,8 @@ object InfectionData {
       .collect()
 
     println("\nUS Average Infections Per Week: \n" + avgDf(0)(0).asInstanceOf[Double].toInt)
-    week_by_state()
+    print("Enter Any Key To Return")
+    StdIn.readLine()
   }
 
   // Overall US Infections

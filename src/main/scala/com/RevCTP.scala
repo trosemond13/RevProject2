@@ -1,5 +1,6 @@
 package com
 
+import com.Main.{email, getAdminStatus}
 import com.roundeights.hasher.Implicits._
 import com.tools.HiveDBC
 import com.tools.Router._
@@ -52,12 +53,13 @@ class RevCTP extends HiveDBC {
     var tries: Int = 3
     clearScreen
     while(!loggedIn) {
-      print(s"MAIN/LOGIN> Enter your email here -> ")
+      println("MAIN/LOGIN")
+      print(s"-> Enter your email here -> ")
       email = StdIn.readLine().toLowerCase().trim
-      print(s"MAIN/LOGIN> Enter your password here -> ")
+      print(s"-> Enter your password here -> ")
       val password: String = StdIn.readLine().trim.sha256.hash
       if(employees.contains(email) && employees(email)._1 == password) {
-        println(s"MAIN/LOGIN> Logged in as <${email.split('@')(0)}>")
+        println(s"-> Logged in as <${email.split('@')(0)}>")
         loggedIn = true
         return SUCCESS
       } else {
@@ -86,7 +88,8 @@ class RevCTP extends HiveDBC {
 
   def createEmployee(): Unit = {
     var tries = 2
-    print("MAIN/SETTINGS/CREATE ACCOUNT> Enter the email of the account you would like to create -> ")
+    println("MAIN/SETTINGS/CREATE ACCOUNT")
+    print("--> Enter the email of the account you would like to create -> ")
     var email = StdIn.readLine()
     while((!checkEmail(email) || employees.contains(email)) && tries > 0) {
       if(!checkEmail(email)) {
@@ -102,9 +105,9 @@ class RevCTP extends HiveDBC {
       }
     }
     if(tries > 0) {
-      print("MAIN/SETTINGS/CREATE ACCOUNT> Enter a password for the account. -> ")
+      print("--> Enter a password for the account. -> ")
       var password = StdIn.readLine().sha256.hash
-      print("MAIN/SETTINGS/CREATE ACCOUNT> Re-enter password to confirm. -> ")
+      print("--> Re-enter password to confirm. -> ")
       var conf_password = StdIn.readLine().sha256.hash
       while (password != conf_password) {
         print("SYSTEM> Passwords do not match. Try entering in your password again -> ")
@@ -112,9 +115,9 @@ class RevCTP extends HiveDBC {
         print("SYSTEM> Retype in the desired password to confirm. -> ")
         conf_password = StdIn.readLine().sha256.hash
       }
-      print("MAIN/SETTINGS/CREATE ACCOUNT> Enter the user's first name -> ")
+      print("--> Enter the user's first name -> ")
       val first_name = StdIn.readLine()
-      print("MAIN/SETTINGS/CREATE ACCOUNT> Enter the user's last name -> ")
+      print("--> Enter the user's last name -> ")
       val last_name = StdIn.readLine()
       try {
         val employee_id = generateNewEmployeeID
@@ -134,6 +137,7 @@ class RevCTP extends HiveDBC {
     var password = employees(email)._1
     val admin = employees(email)._5
 
+    println("MAIN/SETTINGS/UPDATE\n")
     if (first_name_bool) {
       print("SYSTEM> Enter the desired first name -> ")
       first_name = StdIn.readLine()
@@ -147,7 +151,7 @@ class RevCTP extends HiveDBC {
       email = StdIn.readLine()
     }
     if (password_bool) {
-      print("MAIN/SETTINGS/UPDATE> Enter the desired password -> ")
+      print("--> Enter the desired password -> ")
       password = StdIn.readLine().sha256.hash
     }
     if(first_name_bool || last_name_bool || email_bool || password_bool) {
@@ -176,6 +180,13 @@ class RevCTP extends HiveDBC {
       employees(email)._5
   }
 
+  def promptMessage(): Unit = {
+    if(getAdminStatus(email))
+      print(s"$BOLD$BLUE${email.split('@')(0).capitalize}$RESET> ")
+    else
+      print(s"${email.split('@')(0).capitalize}> ")
+  }
+
   def quit: Unit = {
     clearScreen
     println("Exiting in 5 seconds. Syncing System.")
@@ -183,7 +194,7 @@ class RevCTP extends HiveDBC {
     Thread.sleep(1000)
     println("Exiting[...(4).]")
     Thread.sleep(1000)
-    println("Exiting[..(3).]")
+    println("Exiting[..(3)..]")
     Thread.sleep(1000)
     println("Exiting[.(2)...]")
     Thread.sleep(1000)
@@ -196,11 +207,12 @@ class RevCTP extends HiveDBC {
     var break = false
     do {
       clearScreen
+      println(s"${UNDERLINED}MAIN/START RCTP: Please select one of the following menu options.$RESET\n")
       println(
-        """RCTP MENU> 1.) Recoveries
-          |RCTP MENU> 2.) Deaths
-          |RCTP MENU> 3.) Confirmed Infections
-          |RCTP MENU> 4.) Back to Main Menu""".stripMargin)
+        """-> 1.) Recoveries
+          |-> 2.) Deaths
+          |-> 3.) Confirmed Infections
+          |-> 4.) Back to Main Menu""".stripMargin)
 
       if(getAdminStatus(email))
         print(s"$BOLD$BLUE${email.split('@')(0).capitalize}$RESET> ")
@@ -229,19 +241,19 @@ class RevCTP extends HiveDBC {
     clearScreen
     do {
       val deleted_employees = getEmployees(true)
-      println(s"${UNDERLINED}MAIN/SETTINGS MENU: Please select one of the following menu options.$RESET")
+      println(s"${UNDERLINED}MAIN/SETTINGS: Please select one of the following menu options.$RESET\n")
       if(status == "admin") {
         println(
-          """MAIN/SETTINGS MENU> 1.) Update Account Info.
-            |MAIN/SETTINGS MENU> 2.) Revoke/Reinstate Account Access.
-            |MAIN/SETTINGS MENU> 3.) Grant/Revoke Admin Access.
-            |MAIN/SETTINGS MENU> 4.) Create a basic account.
-            |MAIN/SETTINGS MENU> 5.) Return to com.Main Menu""".stripMargin)
+          """-> 1.) Update Account Info.
+            |-> 2.) Revoke/Reinstate Account Access.
+            |-> 3.) Grant/Revoke Admin Access.
+            |-> 4.) Create a basic account.
+            |-> 5.) Return to Main Menu""".stripMargin)
         print(s"$BOLD$BLUE${email.split('@')(0).capitalize}$RESET> ")
       } else {
         println(
-          """MAIN/SETTINGS MENU> 1.) Update Account Info.
-            |MAIN/SETTINGS MENU> 2.) Return to com.Main Menu.""".stripMargin)
+          """-> 1.) Update Account Info.
+            |-> 2.) Return to Main Menu.""".stripMargin)
         print(s"${email.split('@')(0).capitalize}> ")
       }
       val currOption = StdIn.readLine()
@@ -320,11 +332,15 @@ class RevCTP extends HiveDBC {
           val password = employees(email_in)._1
           if (employees(email_in)._5) {
             updateEmployeeInfo(terminate = false, employee_id, first_name, last_name, email_in, password, admin = false)
-            println(s"SYSTEM> Permission Granted. <$email>'s account has gained admin privileges.")
+            employees += email_in -> (password, employee_id, first_name, last_name, false)
+            println(s"SYSTEM> Permission Granted. <$email>'s admin privileges has been revoked.")
           } else {
             updateEmployeeInfo(terminate = false, employee_id, first_name, last_name, email_in, password, admin = true)
-            println(s"SYSTEM> Permission Granted. <$email>'s admin privileges has been revoked.")
+            employees += email_in -> (password, employee_id, first_name, last_name, true)
+            println(s"SYSTEM> Permission Granted. <$email>'s account has gained admin privileges.")
           }
+        } else {
+          println("fefwfwefwe")
         }
         clearScreen
       } else if (currOption == "4" && status == "admin") {
@@ -360,17 +376,17 @@ object Main extends RevCTP {
       initializeAdmin()
     }
     do {
-      println("MAIN MENU> Please select one of the following menu options.")
+      println(s"${UNDERLINED}MAIN MENU: Please select one of the following menu options.$RESET\n")
       if(!loggedIn) {
         println(
-          """|MAIN MENU> 1.) Login
-             |MAIN MENU> 2.) Quit""".stripMargin)
+          """|> 1.) Login
+             |> 2.) Exit""".stripMargin)
       } else {
         println(
-          """MAIN MENU> 1.) Logout
-            |MAIN MENU> 2.) StartRCTP
-            |MAIN MENU> 3.) Settings
-            |MAIN MENU> 4.) Quit Program""".stripMargin)
+          """> 1.) Logout
+            |> 2.) StartRCTP
+            |> 3.) Settings
+            |> 4.) Exit""".stripMargin)
       }
       if(getAdminStatus(email))
         print(s"$BOLD$BLUE${email.split('@')(0).capitalize}$RESET> ")

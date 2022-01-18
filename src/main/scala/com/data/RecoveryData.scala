@@ -1,10 +1,14 @@
 package com.data
 
-import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
+import com.Main.promptMessage
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
+
 import scala.io.StdIn
 import scala.io.AnsiColor.{RESET, UNDERLINED}
 import com.tools.Router.dbCon
+
+import scala.Console.print
 
 object RecoveryData {
   var isFinishedR = false
@@ -13,14 +17,12 @@ object RecoveryData {
   def recovery_options_menu(): Unit = {
     while(!isFinishedR) {
       println(s"""
-                 |${UNDERLINED}Recovery Data Menu${RESET}
+                 |${UNDERLINED}MAIN/START RCTP/Recovery Data Menu: Please select one of the following menu options.${RESET}
                  |
-                 |What Would You Like To See?
-                 |---------------------------
-                 |RECOVERY MENU> 1.) US Total Recovered Patients
-                 |RECOVERY MENU> 2.) Recovered Patients By State
-                 |RECOVERY MENU> 3.) Return To Main""".stripMargin)
-      print(">")
+                 |--> 1.) US Total Recovered Patients
+                 |--> 2.) Recovered Patients By State
+                 |--> 3.) Return To Main""".stripMargin)
+      promptMessage()
       val recoverySelector = StdIn.readLine()
 
       if(recoverySelector == "1")
