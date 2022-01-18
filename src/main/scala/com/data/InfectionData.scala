@@ -7,30 +7,36 @@ import org.apache.spark.sql.functions._
 import scala.io.AnsiColor.{RESET, UNDERLINED}
 
 object InfectionData {
+  var isFinishedI = false
+
   // Sub Menu For Infections Data
   def infections_menu(): Unit = {
-    println(s"""
-        |${UNDERLINED}Recovery Data Menu${RESET}
-        |
-        |What Would You Like To See?
-        |---------------------------
-        |INFECTIONS MENU> 1.) Highest Infection Rates By State
-        |INFECTIONS MENU> 2.) Total US Infections
-        |INFECTIONS MENU> 3.) Average Infections Per Week
-        |INFECTIONS MENU> 4.) Return To Main""".stripMargin)
-    print(">")
-    val infectionsSelector = StdIn.readLine()
+    while(!isFinishedI) {
+      println(s"""
+                 |${UNDERLINED}Infection Data Menu${RESET}
+                 |
+                 |What Would You Like To See?
+                 |---------------------------
+                 |INFECTIONS MENU> 1.) Highest Infection Rates By State
+                 |INFECTIONS MENU> 2.) Total US Infections
+                 |INFECTIONS MENU> 3.) Average Infections Per Week
+                 |INFECTIONS MENU> 4.) Return To Main""".stripMargin)
+      print(">")
+      val infectionsSelector = StdIn.readLine()
 
-    if(infectionsSelector == "1")
-    {rank_states_infections()}
-    else if(infectionsSelector == "2")
-    {overall_infections()}
-    else if(infectionsSelector == "3")
-    {average_weekly_infections()}
-    else if(infectionsSelector == "4")
-    {println("Return To Main")}
-    else
-    {println("Invalid Option")}
+      if(infectionsSelector == "1")
+      {rank_states_infections()}
+      else if(infectionsSelector == "2")
+      {overall_infections()}
+      else if(infectionsSelector == "3")
+      {average_weekly_infections()}
+      else if(infectionsSelector == "4") {
+        println("Return To Main")
+        isFinishedI = true
+      }
+      else
+      {println("Invalid Option")}
+    }
   }
 
   // Create Initial DataFrame For Infections
