@@ -1,7 +1,11 @@
-import scala.Console.{BLUE, BOLD, RESET, print, println}
+package com
+
 import com.roundeights.hasher.Implicits._
-import com.tools.Router._
 import com.tools.HiveDBC
+import com.tools.Router._
+
+import scala.Console.{print, println}
+import scala.io.AnsiColor._
 import scala.io.StdIn
 
 class RevCTP extends HiveDBC {
@@ -48,20 +52,20 @@ class RevCTP extends HiveDBC {
     var tries: Int = 3
     clearScreen
     while(!loggedIn) {
-      print(s"LOGIN MENU> Enter your email here -> ")
+      print(s"MAIN/LOGIN> Enter your email here -> ")
       email = StdIn.readLine().toLowerCase().trim
-      print(s"LOGIN MENU> Enter your password here -> ")
+      print(s"MAIN/LOGIN> Enter your password here -> ")
       val password: String = StdIn.readLine().trim.sha256.hash
       if(employees.contains(email) && employees(email)._1 == password) {
-        println(s"LOGIN MENU> Logged in as <${email.split('@')(0)}>")
+        println(s"MAIN/LOGIN> Logged in as <${email.split('@')(0)}>")
         loggedIn = true
         return SUCCESS
       } else {
         tries = tries - 1
         if(tries>0) {
-          println(s"LOGIN FAILURE> Incorrect email or password. $tries more tries left or the program will exit!")
+          println(s"LOGIN FAILURE> Incorrect email or password. $tries more tries left or the program will return to the main menu!")
         } else {
-          println(s"SYSTEM> You typed in the incorrect email or password too many times. Exiting login page...")
+          println(s"${GREEN}SYSTEM> You typed in the incorrect email or password too many times. Returning back to main menu...$RESET")
           email = ""
           return FAILURE
         }
@@ -73,7 +77,7 @@ class RevCTP extends HiveDBC {
   def logout(): Unit = {
     if(loggedIn) {
       loggedIn = false
-      println(s"SYSTEM> User with email <$email> has been logged out.")
+      println(s"${GREEN}SYSTEM> User with email <$email> has been logged out.$RESET")
       email = ""
     } else {
       println("No user is logged in. Logout failed.")
@@ -82,7 +86,7 @@ class RevCTP extends HiveDBC {
 
   def createEmployee(): Unit = {
     var tries = 2
-    print("CREATE ACCOUNT> Enter the email of the account you would like to create -> ")
+    print("MAIN/SETTINGS/CREATE ACCOUNT> Enter the email of the account you would like to create -> ")
     var email = StdIn.readLine()
     while((!checkEmail(email) || employees.contains(email)) && tries > 0) {
       if(!checkEmail(email)) {
@@ -98,9 +102,9 @@ class RevCTP extends HiveDBC {
       }
     }
     if(tries > 0) {
-      print("CREATE ACCOUNT> Enter a password for the account. -> ")
+      print("MAIN/SETTINGS/CREATE ACCOUNT> Enter a password for the account. -> ")
       var password = StdIn.readLine().sha256.hash
-      print("CREATE ACCOUNT> Re-enter password to confirm. -> ")
+      print("MAIN/SETTINGS/CREATE ACCOUNT> Re-enter password to confirm. -> ")
       var conf_password = StdIn.readLine().sha256.hash
       while (password != conf_password) {
         print("SYSTEM> Passwords do not match. Try entering in your password again -> ")
@@ -108,17 +112,17 @@ class RevCTP extends HiveDBC {
         print("SYSTEM> Retype in the desired password to confirm. -> ")
         conf_password = StdIn.readLine().sha256.hash
       }
-      print("CREATE ACCOUNT> Enter the user's first name -> ")
+      print("MAIN/SETTINGS/CREATE ACCOUNT> Enter the user's first name -> ")
       val first_name = StdIn.readLine()
-      print("CREATE ACCOUNT> Enter the user's last name -> ")
+      print("MAIN/SETTINGS/CREATE ACCOUNT> Enter the user's last name -> ")
       val last_name = StdIn.readLine()
       try {
         val employee_id = generateNewEmployeeID
         createEmployee(employee_id, first_name, last_name, email, password, admin = false)
         employees += email -> (password, employee_id, first_name, last_name, false)
-        println(s"SYSTEM> <$email>'s account has successfully been created")
+        println(s"SYSTEM> <$email>'s account has successfully been created.")
       } catch {
-        case _ => println(s"SYSTEM> <$email>'s account has not been created. Please try again")
+        case _ => println(s"SYSTEM> <$email>'s account has not been created. Please try again.")
       }
     }
   }
@@ -174,12 +178,17 @@ class RevCTP extends HiveDBC {
 
   def quit: Unit = {
     clearScreen
-    print("Exiting in 5 seconds. Syncing System.")
+    println("Exiting in 5 seconds. Syncing System.")
     println("Exiting[....(5)]")
+    Thread.sleep(1000)
     println("Exiting[...(4).]")
+    Thread.sleep(1000)
     println("Exiting[..(3).]")
+    Thread.sleep(1000)
     println("Exiting[.(2)...]")
+    Thread.sleep(1000)
     println("Exiting[(1)....]")
+    Thread.sleep(1000)
     println("Exiting Complete!")
   }
 
@@ -191,7 +200,7 @@ class RevCTP extends HiveDBC {
         """RCTP MENU> 1.) Recoveries
           |RCTP MENU> 2.) Deaths
           |RCTP MENU> 3.) Confirmed Infections
-          |RCTP MENU> 4.) Back to Main Menu""".stripMargin)
+          |RCTP MENU> 4.) Back to com.Main Menu""".stripMargin)
 
       if(getAdminStatus(email))
         print(s"$BOLD$BLUE${email.split('@')(0).capitalize}$RESET> ")
@@ -206,7 +215,6 @@ class RevCTP extends HiveDBC {
         case "quit" => break = true
         case _ => println("Invalid Option. Enter a valid number option.")
       }
-
       clearScreen
     } while (!break)
   }
@@ -221,19 +229,19 @@ class RevCTP extends HiveDBC {
     clearScreen
     do {
       val deleted_employees = getEmployees(true)
-      println("SETTINGS MENU> Please select one of the following menu options.")
+      println(s"${UNDERLINED}MAIN/SETTINGS MENU: Please select one of the following menu options.$RESET")
       if(status == "admin") {
         println(
-          """SETTINGS MENU> 1.) Update Account Info.
-            |SETTINGS MENU> 2.) Revoke/Reinstate Account Access.
-            |SETTINGS MENU> 3.) Grant/Revoke Admin Access.
-            |SETTINGS MENU> 4.) Create a basic account.
-            |SETTINGS MENU> 5.) Return to Main Menu""".stripMargin)
+          """MAIN/SETTINGS MENU> 1.) Update Account Info.
+            |MAIN/SETTINGS MENU> 2.) Revoke/Reinstate Account Access.
+            |MAIN/SETTINGS MENU> 3.) Grant/Revoke Admin Access.
+            |MAIN/SETTINGS MENU> 4.) Create a basic account.
+            |MAIN/SETTINGS MENU> 5.) Return to com.Main Menu""".stripMargin)
         print(s"$BOLD$BLUE${email.split('@')(0).capitalize}$RESET> ")
       } else {
         println(
-          """SETTINGS MENU> 1.) Update Account Info.
-            |SETTINGS MENU> 2.) Return to Main Menu.""".stripMargin)
+          """MAIN/SETTINGS MENU> 1.) Update Account Info.
+            |MAIN/SETTINGS MENU> 2.) Return to com.Main Menu.""".stripMargin)
         print(s"${email.split('@')(0).capitalize}> ")
       }
       val currOption = StdIn.readLine()
@@ -345,7 +353,7 @@ object Main extends RevCTP {
     var currCommand = ""
     var break = false
 
-    println(s"SYSTEM> Welcome to the Revature Covid Tracker Planning app. We appreciate your subscription to our service.")
+    println(s"SYSTEM> Welcome to the Revature Covid Tracker Planner App. We appreciate your subscription to our service.")
     dbCon = rctp.spark
 
     if (!rctp.init) { //Initializes admin account if there are no users in the database
@@ -384,4 +392,5 @@ object Main extends RevCTP {
       clearScreen
     } while(!break)
   }
+  //TODO Add spark.close inside of quit program.
 }

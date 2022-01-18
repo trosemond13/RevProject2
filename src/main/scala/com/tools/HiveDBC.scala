@@ -51,9 +51,6 @@ class HiveDBC {
       executeDML(spark, "CREATE DATABASE IF NOT EXISTS RevCTP")
       executeDML(spark, "USE RevCTP")
       executeDML(spark, "CREATE TABLE IF NOT EXISTS employees(employee_id Long, first_name String, last_name String, email String, password String, admin Boolean, deleted Boolean)")
-      //executeDML(spark, "CREATE TABLE IF NOT EXISTS recovered()")
-      //executeDML(spark, "CREATE TABLE IF NOT EXISTS deaths()")
-      //executeDML(spark, "CREATE TABLE IF NOT EXISTS confirmed()")
     }
     spark
   }
