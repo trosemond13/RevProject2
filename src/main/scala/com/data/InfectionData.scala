@@ -1,9 +1,13 @@
 package com.data
 
+import com.Main.promptMessage
+
 import scala.io.StdIn
 import com.tools.Router.dbCon
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
+
+import scala.Console.print
 import scala.io.AnsiColor.{RESET, UNDERLINED}
 
 object InfectionData {
@@ -20,7 +24,7 @@ object InfectionData {
                  |--> 3.) Average Infections Per Week
                  |--> 4.) Average Infections Per Week Per State
                  |--> 5.) Return To Main""".stripMargin)
-      print(">")
+      promptMessage()
       val infectionsSelector = StdIn.readLine()
 
       if(infectionsSelector == "1")
@@ -32,7 +36,6 @@ object InfectionData {
       else if (infectionsSelector == "4")
       {week_by_state()}
       else if(infectionsSelector == "5") {
-        println("Return To Main")
         isFinishedI = true
       }
       else
@@ -92,6 +95,8 @@ object InfectionData {
       .collect()
 
     println("\nUS Average Infections Per Week: \n" + avgDf(0)(0).asInstanceOf[Double].toInt)
+    print("Enter Any Key To Return")
+    StdIn.readLine()
   }
 
   // Overall US Infections
