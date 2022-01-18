@@ -200,7 +200,7 @@ class RevCTP extends HiveDBC {
         """RCTP MENU> 1.) Recoveries
           |RCTP MENU> 2.) Deaths
           |RCTP MENU> 3.) Confirmed Infections
-          |RCTP MENU> 4.) Back to com.Main Menu""".stripMargin)
+          |RCTP MENU> 4.) Back to Main Menu""".stripMargin)
 
       if(getAdminStatus(email))
         print(s"$BOLD$BLUE${email.split('@')(0).capitalize}$RESET> ")
