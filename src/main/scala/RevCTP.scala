@@ -1,7 +1,7 @@
 import scala.Console.{BLUE, BOLD, RESET, print, println}
 import com.roundeights.hasher.Implicits._
+import com.tools.Router._
 import com.tools.HiveDBC
-
 import scala.io.StdIn
 
 class RevCTP extends HiveDBC {
@@ -43,6 +43,7 @@ class RevCTP extends HiveDBC {
     employees += email -> (password, 8253, first_name, last_name, true)
     clearScreen
   }
+
   def login(): Int = {
     var tries: Int = 3
     clearScreen
@@ -68,6 +69,7 @@ class RevCTP extends HiveDBC {
     }
     FAILURE
   }
+
   def logout(): Unit = {
     if(loggedIn) {
       loggedIn = false
@@ -77,6 +79,7 @@ class RevCTP extends HiveDBC {
       println("No user is logged in. Logout failed.")
     }
   }
+
   def createEmployee(): Unit = {
     var tries = 2
     print("CREATE ACCOUNT> Enter the email of the account you would like to create -> ")
@@ -119,6 +122,7 @@ class RevCTP extends HiveDBC {
       }
     }
   }
+
   def updateEmployeeInfo(first_name_bool: Boolean, last_name_bool: Boolean, email_bool: Boolean, password_bool: Boolean): Unit = {
     val employee_id: Long = employees(email)._2
     var first_name: String = employees(email)._3
@@ -150,6 +154,7 @@ class RevCTP extends HiveDBC {
       println(s"SYSTEM> You have not made any changes to your account.")
     }
   }
+
   def checkEmail(e: String): Boolean = {
     val emailRegex = """^[a-zA-Z0-9.{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])*(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$""".r
     e match {
@@ -159,12 +164,14 @@ class RevCTP extends HiveDBC {
       case _ => false
     }
   }
+  
   def getAdminStatus(email: String): Boolean = {
     if(!employees.contains(email))
       false
     else
       employees(email)._5
   }
+
   def quit: Unit = {
     clearScreen
     print("Exiting in 5 seconds. Syncing System.")
@@ -175,14 +182,15 @@ class RevCTP extends HiveDBC {
     println("Exiting[(1)....]")
     println("Exiting Complete!")
   }
+
   def startRCTP(): Unit = {
     var break = false
     do {
       clearScreen
       println(
-        """RCTP MENU> 1.) Recovery
-          |RCTP MENU> 2.) Death
-          |RCTP MENU> 3.) Confirmed
+        """RCTP MENU> 1.) Recoveries
+          |RCTP MENU> 2.) Deaths
+          |RCTP MENU> 3.) Confirmed Infections
           |RCTP MENU> 4.) Back to Main Menu""".stripMargin)
 
       if(getAdminStatus(email))
@@ -191,16 +199,18 @@ class RevCTP extends HiveDBC {
         print(s"${email.split('@')(0).capitalize}> ")
 
       StdIn.readLine() match {
-        case "1" => println("option 1")
-        case "2" => println("option 2")
-        case "3" => println("option 3")
-        case "4" => println("option 4")
+        case "1" => recovery_data_route()
+        case "2" => mortality_data_route()
+        case "3" => infection_data_route()
+        case "4" => break = true
         case "quit" => break = true
         case _ => println("Invalid Option. Enter a valid number option.")
       }
+
       clearScreen
     } while (!break)
   }
+
   def settings(status: String) = {
     var break = false
     var first_name_change = false
@@ -321,13 +331,14 @@ class RevCTP extends HiveDBC {
       }
     } while(!break)
   }
+
   def clearScreen: Unit = {
     println("============================================================================================================================")
     println("-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_")
     println("============================================================================================================================")
-
   }
 }
+
 object Main extends RevCTP {
   def main(args:Array[String]): Unit = {
     val rctp = new RevCTP()
@@ -335,6 +346,7 @@ object Main extends RevCTP {
     var break = false
 
     println(s"SYSTEM> Welcome to the Revature Covid Tracker Planning app. We appreciate your subscription to our service.")
+    dbCon = rctp.spark
 
     if (!rctp.init) { //Initializes admin account if there are no users in the database
       initializeAdmin()
@@ -368,6 +380,7 @@ object Main extends RevCTP {
         case "4" if loggedIn => quit; break = true
         case _ => println("Invalid Option. Enter a valid number option."); currCommand += "!"
       }
+
       clearScreen
     } while(!break)
   }
