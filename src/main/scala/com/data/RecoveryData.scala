@@ -1,10 +1,14 @@
 package com.data
 
-import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
+import com.Main.promptMessage
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
+
 import scala.io.StdIn
 import scala.io.AnsiColor.{RESET, UNDERLINED}
 import com.tools.Router.dbCon
+
+import scala.Console.print
 
 object RecoveryData {
   var isFinishedR = false
@@ -18,7 +22,7 @@ object RecoveryData {
                  |--> 1.) US Total Recovered Patients
                  |--> 2.) Recovered Patients By State
                  |--> 3.) Return To Main""".stripMargin)
-      print(">")
+      promptMessage()
       val recoverySelector = StdIn.readLine()
 
       if(recoverySelector == "1")

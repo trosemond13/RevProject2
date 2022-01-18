@@ -1,5 +1,6 @@
 package com
 
+import com.Main.{email, getAdminStatus}
 import com.roundeights.hasher.Implicits._
 import com.tools.HiveDBC
 import com.tools.Router._
@@ -179,6 +180,13 @@ class RevCTP extends HiveDBC {
       employees(email)._5
   }
 
+  def promptMessage(): Unit = {
+    if(getAdminStatus(email))
+      print(s"$BOLD$BLUE${email.split('@')(0).capitalize}$RESET> ")
+    else
+      print(s"${email.split('@')(0).capitalize}> ")
+  }
+
   def quit: Unit = {
     clearScreen
     println("Exiting in 5 seconds. Syncing System.")
@@ -324,11 +332,15 @@ class RevCTP extends HiveDBC {
           val password = employees(email_in)._1
           if (employees(email_in)._5) {
             updateEmployeeInfo(terminate = false, employee_id, first_name, last_name, email_in, password, admin = false)
-            println(s"SYSTEM> Permission Granted. <$email>'s account has gained admin privileges.")
+            employees += email_in -> (password, employee_id, first_name, last_name, false)
+            println(s"SYSTEM> Permission Granted. <$email>'s admin privileges has been revoked.")
           } else {
             updateEmployeeInfo(terminate = false, employee_id, first_name, last_name, email_in, password, admin = true)
-            println(s"SYSTEM> Permission Granted. <$email>'s admin privileges has been revoked.")
+            employees += email_in -> (password, employee_id, first_name, last_name, true)
+            println(s"SYSTEM> Permission Granted. <$email>'s account has gained admin privileges.")
           }
+        } else {
+          println("fefwfwefwe")
         }
         clearScreen
       } else if (currOption == "4" && status == "admin") {
@@ -364,7 +376,7 @@ object Main extends RevCTP {
       initializeAdmin()
     }
     do {
-      println("MAIN MENU: Please select one of the following menu options.\n")
+      println(s"${UNDERLINED}MAIN MENU: Please select one of the following menu options.$RESET\n")
       if(!loggedIn) {
         println(
           """|> 1.) Login
