@@ -10,19 +10,19 @@ object Router {
 
   // Pull Latest Recovery Data For US
   def recovery_data_route(): Unit = {
-    println("\n\nUS Recovery Data")
+    println("\n\nUS Recovery Data\n")
     recovery_options_menu()
   }
 
   // Pull Mortality Rate Data For US
   def mortality_data_route(): Unit = {
-    println("\n\nUS Mortality Rate Data")
+    println("\n\nUS Mortality Rate Data\n")
     mortality_menu()
   }
 
   // Pull Infection Rate Data For US
   def infection_data_route(): Unit = {
-    println("\n\nUS Infection Rate Data")
+    println("\n\nUS Infection Rate Data\n")
     infections_menu()
   }
 }

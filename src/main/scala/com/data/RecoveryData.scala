@@ -13,13 +13,11 @@ object RecoveryData {
   def recovery_options_menu(): Unit = {
     while(!isFinishedR) {
       println(s"""
-                 |${UNDERLINED}Recovery Data Menu${RESET}
+                 |${UNDERLINED}MAIN/START RCTP/Recovery Data Menu: Please select one of the following menu options.${RESET}
                  |
-                 |What Would You Like To See?
-                 |---------------------------
-                 |RECOVERY MENU> 1.) US Total Recovered Patients
-                 |RECOVERY MENU> 2.) Recovered Patients By State
-                 |RECOVERY MENU> 3.) Return To Main""".stripMargin)
+                 |--> 1.) US Total Recovered Patients
+                 |--> 2.) Recovered Patients By State
+                 |--> 3.) Return To Main""".stripMargin)
       print(">")
       val recoverySelector = StdIn.readLine()
 

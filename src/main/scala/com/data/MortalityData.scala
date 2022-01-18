@@ -34,14 +34,12 @@ object MortalityData {
 
     while(!isFinishedD) {
       println(s"""
-                 |${UNDERLINED}Mortality Data Menu${RESET}
+                 |${UNDERLINED}MAIN/START RCTP/Mortality Data Menu: Please select one of the following menu options.${RESET}
                  |
-                 |What Would You Like To See?
-                 |---------------------------
-                 |MORTALITY MENU> 1.) Death Percentages By State
-                 |MORTALITY MENU> 2.) Monthly Death Averages
-                 |MORTALITY MENU> 3.) Spring or Summer Travel
-                 |MORTALITY MENU> 4.) Return To Main""".stripMargin)
+                 |--> 1.) Death Percentages By State
+                 |--> 2.) Monthly Death Averages
+                 |--> 3.) Spring or Summer Travel
+                 |--> 4.) Return To Main""".stripMargin)
       val mortalitySelector = StdIn.readLine()
       new_session.displayTable()
 
