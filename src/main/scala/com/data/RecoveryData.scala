@@ -1,13 +1,11 @@
 package com.data
 
-import com.Main.promptMessage
+import com.Main.{clearScreen, promptMessage}
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
-
 import scala.io.StdIn
-import scala.io.AnsiColor.{RESET, UNDERLINED}
+import scala.io.AnsiColor.{BOLD, GREEN, RESET, UNDERLINED}
 import com.tools.Router.dbCon
-
 import scala.Console.print
 
 object RecoveryData {
@@ -16,8 +14,8 @@ object RecoveryData {
   // Sub Menu For Recovery Data
   def recovery_options_menu(): Unit = {
     while(!isFinishedR) {
-      println(s"""
-                 |${UNDERLINED}MAIN/START RCTP/Recovery Data Menu: Please select one of the following menu options.${RESET}
+      clearScreen()
+      println(s"""${UNDERLINED}MAIN/START RCTP/Recovery Data Menu: Please select one of the following menu options.$RESET
                  |
                  |--> 1.) US Total Recovered Patients
                  |--> 2.) Recovered Patients By State
@@ -30,11 +28,10 @@ object RecoveryData {
       else if(recoverySelector == "2")
       {return_states_recovered()}
       else if(recoverySelector == "3") {
-        println("Return To Main")
         isFinishedR = true
+      } else {
+        println("Invalid Option")
       }
-      else
-      {println("Invalid Option")}
     }
   }
 
@@ -44,8 +41,7 @@ object RecoveryData {
       .option("header", "true")
       .options(Map("inferSchema"->"true","delimiter"->","))
       .load("KaggleData(Complete)\\KaggleData(Complete)\\covid_19_data_complete(Kaggle).csv")
-
-    return df
+    df
   }
 
   // Show List Of Recovered Patients Per State
@@ -57,7 +53,7 @@ object RecoveryData {
 
     ds.createOrReplaceTempView("StatesList")
 
-    println("\nRecovery Rates By State\n")
+    println("Recovery Rates By State")
 
     dbCon.sql(
       """
@@ -67,7 +63,7 @@ object RecoveryData {
         AND ProvinceState != 'US'
         AND ProvinceState != 'Recovered'
       GROUP BY ProvinceState ORDER BY ProvinceState
-      """).show(Int.MaxValue, false)
+      """).show(Int.MaxValue, truncate = false)
 
     print("Enter Any Key To Return")
     StdIn.readLine()
@@ -84,7 +80,7 @@ object RecoveryData {
         && col("Province/State").notEqual("Recovered"))
       .agg(sum(col("TotalRecovered")))
 
-    println("\nPatients Recovered: " + recNum.first()(0).asInstanceOf[Double].toLong)
+    println(s"$GREEN${BOLD}Patients Recovered: " + recNum.first()(0).asInstanceOf[Double].toLong + RESET)
 
     print("Enter Any Key To Return")
     StdIn.readLine()
