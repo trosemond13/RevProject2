@@ -1,12 +1,13 @@
 package com
 
 import com.roundeights.hasher.Implicits._
+import java.io.IOException
 import com.tools.HiveDBC
 import com.tools.Router._
-
 import scala.Console.{print, println}
 import scala.io.AnsiColor._
 import scala.io.StdIn
+
 
 class RevCTP extends HiveDBC {
   val SUCCESS: Int = 0
@@ -53,14 +54,14 @@ class RevCTP extends HiveDBC {
     }
     if(tries > 0) {
       print("--> Enter a password for the account. -> ")
-      var password = StdIn.readLine().sha256.hash
+      var password = StdIn.readLine()//.sha256.hash
       print("--> Re-enter password to confirm. -> ")
-      var conf_password = StdIn.readLine().sha256.hash
+      var conf_password = StdIn.readLine()//.sha256.hash
       while (password != conf_password) {
         print("SYSTEM> Passwords do not match. Try entering in your password again -> ")
-        password = StdIn.readLine().sha256.hash
+        password = StdIn.readLine()//.sha256.hash
         print("SYSTEM> Retype in the desired password to confirm. -> ")
-        conf_password = StdIn.readLine().sha256.hash
+        conf_password = StdIn.readLine()//.sha256.hash
       }
       print("--> Enter the user's first name -> ")
       val first_name = StdIn.readLine()
@@ -70,9 +71,9 @@ class RevCTP extends HiveDBC {
         val employee_id = generateNewEmployeeID
         createEmployee(employee_id, first_name, last_name, email, password, admin = false)
         employees += email -> (password, employee_id, first_name, last_name, false)
-        println(s"SYSTEM> <$email>'s account has successfully been created.")
+        println(s"$BOLD${GREEN}SYSTEM> <$email>'s account has successfully been created.$RESET")
       } catch {
-        case _: Throwable => println(s"SYSTEM> <$email>'s account has not been created. Please try again.")
+        case _: Throwable => println(s"${RED}SYSTEM> <$email>'s account has not been created.$RESET Please try again.")
       }
     }
   }
@@ -95,14 +96,14 @@ class RevCTP extends HiveDBC {
     }
 
     print("FIRST TIME USE> Enter the desired password -> ")
-    var password = StdIn.readLine().sha256.hash
+    var password = StdIn.readLine()//.sha256.hash
     print("FIRST TIME USE> Retype in the desired password to confirm. -> ")
-    var conf_password = StdIn.readLine().sha256.hash
+    var conf_password = StdIn.readLine()//.sha256.hash
     while(password != conf_password) {
       print(s"${RED}FIRST TIME USE> Passwords do not match.$RESET Try entering in your password again -> ")
-      password = StdIn.readLine().sha256.hash
+      password = StdIn.readLine()//.sha256.hash
       print("FIRST TIME USE> Retype in the desired password to confirm. -> ")
-      conf_password = StdIn.readLine().sha256.hash
+      conf_password = StdIn.readLine()//.sha256.hash
     }
 
     print("FIRST TIME USE> Enter your first name -> ")
@@ -123,7 +124,7 @@ class RevCTP extends HiveDBC {
       print(s"-> Enter your email here -> ")
       email = StdIn.readLine().toLowerCase().trim
       print(s"-> Enter your password here -> ")
-      val password: String = StdIn.readLine().trim.sha256.hash
+      val password: String = StdIn.readLine().trim//.sha256.hash
       if(employees.contains(email) && employees(email)._1 == password) {
         println(s"-> ${GREEN}Logged in as <$RESET${email.split('@')(0)}$GREEN>$RESET")
         loggedIn = true
@@ -344,7 +345,7 @@ class RevCTP extends HiveDBC {
     }
     if (password_bool) {
       print("--> Enter the desired password -> ")
-      password = StdIn.readLine().sha256.hash
+      password = StdIn.readLine()//.sha256.hash
     }
     if(first_name_bool || last_name_bool || email_bool || password_bool) {
       employees += email -> (password, employee_id, first_name, last_name, admin)
@@ -358,6 +359,10 @@ class RevCTP extends HiveDBC {
 
 object Main extends RevCTP {
   def main(args:Array[String]): Unit = {
+    import com.tools.Router._
+    import scala.Console.{print, println}
+    import scala.io.AnsiColor._
+    import scala.io.StdIn
     val rctp = new RevCTP()
     var currCommand = ""
     var break = false
