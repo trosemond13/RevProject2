@@ -11,7 +11,6 @@ import com.tools.Router.dbCon
 import scala.Console.print
 
 object MortalityData {
-
   def mortality_menu(): Unit = {
     val new_session = new DeathTable()
     var isFinishedD = false
@@ -24,19 +23,22 @@ object MortalityData {
                  |
                  |--> 1.) Death Percentages By State
                  |--> 2.) Monthly Death Averages
-                 |--> 3.) Spring or Summer Travel
-                 |--> 4.) Return To Main""".stripMargin)
-
+                 |--> 3.) Highest Mortality Rates By State
+                 |--> 4.) Spring or Summer Travel
+                 |--> 5.) Return To Main""".stripMargin)
       promptMessage()
       val mortalitySelector = StdIn.readLine()
 
-      if(mortalitySelector == "1") {
-        new_session.deathPercentageState()
-      } else if(mortalitySelector == "2") {
-        new_session.deathMonthlyAvg()
-      } else if(mortalitySelector == "3") {
-        new_session.springOrSummerTravel()
-      } else if(mortalitySelector == "4") {
+      if(mortalitySelector == "1")
+      {new_session.deathPercentageState()}
+      else if(mortalitySelector == "2")
+      {new_session.deathMonthlyAvg()}
+      else if(mortalitySelector == "3")
+      {new_session.mortality_rates_by_state()}
+      else if(mortalitySelector == "4")
+      {new_session.springOrSummerTravel()}
+      else if(mortalitySelector == "5") {
+        println("Return To Main")
         isFinishedD = true
       } else {
         println("Invalid Selection")
@@ -320,6 +322,45 @@ object MortalityData {
       } else {
         println(s"$GREEN${BOLD}It's safer to travel in the summer there are $springMonthsMore more people who have died in the spring$RESET")
       }
+    }
+
+    def infection_table: DataFrame = {
+      val infection_ds = dbCon.read.format("csv")
+        .option("header", "true")
+        .options(Map("inferSchema"->"true","delimiter"->","))
+        .load("KaggleData(Complete)\\KaggleData(Complete)\\time_series_covid_19_confirmed_US_complete(Kaggle).csv")
+
+      return infection_ds
+    }
+
+    def death_table: DataFrame = {
+      val death_ds = dbCon.read.format("csv")
+        .option("header", "true")
+        .options(Map("inferSchema"->"true","delimiter"->","))
+        .load("KaggleData(Complete)\\KaggleData(Complete)\\time_series_covid_19_deaths_US_complete(Kaggle).csv")
+
+      return death_ds
+    }
+
+    def mortality_rates_by_state(): Unit ={
+      val death_res = death_table
+        .withColumnRenamed("5/29/21", "05_29_2021_D")
+
+      val infection_res = infection_table
+        .withColumnRenamed("5/29/21", "05_29_2021_I")
+
+      death_res.createOrReplaceTempView("DeathList")
+      infection_res.createOrReplaceTempView("InfectionList")
+
+      println("\nTop 10 Highest Mortality Rates In the US\n")
+      dbCon.sql(
+        """
+        SELECT DeathList.Province_State, ROUND((SUM(05_29_2021_D) / SUM(05_29_2021_I))*100, 2) AS MortalityRate
+        FROM DeathList LEFT JOIN InfectionList
+        ON DeathList.UID = InfectionList.UID
+        WHERE DeathList.Province_State NOT LIKE("%Grand Princess%")
+        GROUP BY DeathList.Province_State
+        ORDER BY MortalityRate DESC""".stripMargin).show(10, false)
       print("Enter Any Key To Return")
       StdIn.readLine()
     }
