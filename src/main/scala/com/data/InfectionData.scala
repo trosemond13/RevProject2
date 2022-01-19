@@ -8,7 +8,7 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 
 import scala.Console.print
-import scala.io.AnsiColor.{RESET, UNDERLINED}
+import scala.io.AnsiColor.{GREEN, BOLD, RESET, UNDERLINED}
 
 object InfectionData {
   var isFinishedI = false
@@ -94,7 +94,7 @@ object InfectionData {
       .withColumnRenamed("(sum((5/29/21 / 494)) * 7)", "Infections Per Week")
       .collect()
 
-    println("\nUS Average Infections Per Week: \n" + avgDf(0)(0).asInstanceOf[Double].toInt)
+    println(s"$GREEN${BOLD}US Average Infections Per Week: \n" + avgDf(0)(0).asInstanceOf[Double].toInt + RESET)
     print("Enter Any Key To Return")
     StdIn.readLine()
   }
@@ -102,7 +102,7 @@ object InfectionData {
   // Overall US Infections
   def overall_infections(): Unit = {
     val overallDf = create_df().select(sum(col("5/29/21")))
-    println("\nTotal US Confirmed Infections: \n" + overallDf.first()(0))
+    println(s"$GREEN${BOLD}Total US Confirmed Infections: \n" + overallDf.first()(0) + RESET)
 
     print("Enter Any Key To Return")
     StdIn.readLine()

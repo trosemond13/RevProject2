@@ -208,7 +208,7 @@ class RevCTP extends HiveDBC {
 
     clearScreen()
     do {
-      val deleted_employees = getEmployees(true)
+      var deleted_employees = getEmployees(true)
       println(s"${UNDERLINED}MAIN/SETTINGS: Please select one of the following menu options.$RESET\n")
       if(status == "admin") {
         println(
@@ -263,15 +263,16 @@ class RevCTP extends HiveDBC {
           val password = deleted_employees(email_in)._1
           updateEmployeeInfo(terminate = false, employee_id, first_name, last_name, email_in, password, admin = false)
           employees += email_in -> (password, employee_id, first_name, last_name, false)
-          println(s"SYSTEM> Permission Granted. <$email_in>'s account access has been revoked!")
+          deleted_employees -= email_in
+          println(s"$GREEN${BOLD}SYSTEM> Permission Granted. <$email_in>'s account access has been reinstated!$RESET")
         } else if(employees.contains(email_in)) {
           val employee_id = employees(email_in)._2
           val first_name = employees(email_in)._3
           val last_name = employees(email_in)._4
           val password = employees(email_in)._1
           updateEmployeeInfo(terminate = true, employee_id, first_name, last_name, email_in, password, admin = false)
-          employees -= email
-          println(s"SYSTEM> Permission Granted. <$email_in>'s account access has been reinstated!")
+          employees -= email_in
+          println(s"$GREEN${BOLD}SYSTEM> Permission Granted. <$email_in>'s account access has been revoked!$RESET")
         }
         clearScreen()
       } else if(currOption == "3" && status == "admin") {
@@ -281,16 +282,16 @@ class RevCTP extends HiveDBC {
         var tries = 2
         while ((email_in == email || (!employees.contains(email_in) && !deleted_employees.contains(email_in))) && tries > 0) {
           if (email_in == email) {
-            print(s"SYSTEM> Permission denied. You cannot revoke your own admin access. Try another email ($tries more tries left) -> ")
+            print(s"${RED}SYSTEM> Permission denied.$RESET You cannot revoke your own admin access. Try another email ($tries more tries left) -> ")
           }
           if (!employees.contains(email_in)) {
-            print(s"SYSTEM> Permission denied. Employee does not exist. Try again ($tries more tries left) -> ")
+            print(s"${RED}SYSTEM> Permission denied.$RESET Employee does not exist. Try again ($tries more tries left) -> ")
           }
           email_in = StdIn.readLine()
-          if (tries == 0) {
-            println("SYSTEM> You have entered invalid input too many times. Returning to Settings menu.")
-          }
           tries = tries - 1
+          if (tries == 0) {
+            println(s"${RED}SYSTEM> You have entered invalid input too many times.$RESET Returning to Settings menu.")
+          }
         }
         if(employees.contains(email_in)) {
           val employee_id = employees(email_in)._2
@@ -300,14 +301,12 @@ class RevCTP extends HiveDBC {
           if (employees(email_in)._5) {
             updateEmployeeInfo(terminate = false, employee_id, first_name, last_name, email_in, password, admin = false)
             employees += email_in -> (password, employee_id, first_name, last_name, false)
-            println(s"SYSTEM> Permission Granted. <$email>'s admin privileges has been revoked.")
+            println(s"$BOLD${GREEN}SYSTEM> Permission Granted. <$email>'s admin privileges has been revoked.$RESET")
           } else {
             updateEmployeeInfo(terminate = false, employee_id, first_name, last_name, email_in, password, admin = true)
             employees += email_in -> (password, employee_id, first_name, last_name, true)
-            println(s"SYSTEM> Permission Granted. <$email>'s account has gained admin privileges.")
+            println(s"$BOLD${GREEN}SYSTEM> Permission Granted. <$email>'s account has gained admin privileges.$RESET")
           }
-        } else {
-          println("fefwfwefwe")
         }
         clearScreen()
       } else if (currOption == "4" && status == "admin") {
