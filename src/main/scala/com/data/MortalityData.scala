@@ -1,81 +1,51 @@
 package com.data
 
-import com.Main.{email, getAdminStatus, promptMessage}
+import com.Main.{clearScreen, promptMessage}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import scala.io.StdIn
-import scala.io.AnsiColor.{BLUE, BOLD, RESET, UNDERLINED}
+import scala.io.AnsiColor.{RED, GREEN, BOLD, RESET, UNDERLINED}
 import org.apache.spark.sql.functions.array
 import com.tools.Router.dbCon
 
 import scala.Console.print
 
 object MortalityData {
-  /*def main(args: Array[String]): Unit = {
-    val new_session = new DeathTable()
-    new_session.start_session()
-    new_session.establishTable()
-    new_session.showTables()
-    new_session.deathPercentageState()
-    new_session.deathMonthlyAvg()
-    new_session.springOrSummerTravel()
-    new_session.displayTable()
-    new_session.closeDeathTable()
-    // create a spark session
-    // for Windows
-    //System.setProperty("hadoop.home.dir", "C:\\winutils")
-  }*/
 
   def mortality_menu(): Unit = {
-    val new_session =new DeathTable()
+    val new_session = new DeathTable()
+    var isFinishedD = false
     new_session.spark = dbCon
     new_session.establishTable()
 
-    var isFinishedD = false
-
     while(!isFinishedD) {
-      println(s"""
-                 |${UNDERLINED}MAIN/START RCTP/Mortality Data Menu: Please select one of the following menu options.${RESET}
+      clearScreen()
+      println(s"""${UNDERLINED}MAIN/START RCTP/Mortality Data Menu: Please select one of the following menu options.$RESET
                  |
                  |--> 1.) Death Percentages By State
                  |--> 2.) Monthly Death Averages
                  |--> 3.) Spring or Summer Travel
                  |--> 4.) Return To Main""".stripMargin)
 
-      if(getAdminStatus(email))
-        print(s"$BOLD$BLUE${email.split('@')(0).capitalize}$RESET> ")
-      else
-        print(s"${email.split('@')(0).capitalize}> ")
+      promptMessage()
       val mortalitySelector = StdIn.readLine()
 
-      if(mortalitySelector == "1")
-      {new_session.deathPercentageState()}
-      else if(mortalitySelector == "2")
-      {new_session.deathMonthlyAvg()}
-      else if(mortalitySelector == "3")
-      {new_session.springOrSummerTravel()}
-      else if(mortalitySelector == "4") {
-        println("Return To Main")
+      if(mortalitySelector == "1") {
+        new_session.deathPercentageState()
+      } else if(mortalitySelector == "2") {
+        new_session.deathMonthlyAvg()
+      } else if(mortalitySelector == "3") {
+        new_session.springOrSummerTravel()
+      } else if(mortalitySelector == "4") {
         isFinishedD = true
+      } else {
+        println("Invalid Selection")
       }
-      else
-      {println("Invalid Selection")}
     }
   }
 
   class DeathTable {
     var spark: SparkSession = null
-
-    def start_session(): Unit = {
-      System.setProperty("hadoop.home.dir", "C:\\hadoop")
-      spark = SparkSession
-        .builder
-        .appName("DeathTable")
-        .config("spark.master", "local")
-        .enableHiveSupport()
-        .getOrCreate()
-      spark.sparkContext.setLogLevel("ERROR")
-    }
 
     private def createDeathTable(): DataFrame = {
       var covidDeaths = spark.read.csv("KaggleData(Complete)/KaggleData(Complete)/time_series_covid_19_deaths_US_complete(Kaggle).csv")
@@ -165,18 +135,24 @@ object MortalityData {
       covidDeaths
     }
 
-    //createDeathTable().show(false)
-    //val sampleGetSomething = covidDeaths.withColumn("Result", array_position("Early_May_2021","107"))
     def establishTable(): Unit = {
       createDeathTable().createOrReplaceTempView("CovidDeathsUS")
     }
 
-    def showTables(): Unit = {
-      spark.sql("show tables").show
+    def checkMonth(input: String): Boolean = {
+      if(input == "January" || input == "February" || input == "March" || input == "April"
+        || input == "May" || input == "June" || input == "July" || input == "August"
+        || input == "September" || input == "October" || input == "November" || input == "December") {
+        return true
+      }
+      false
     }
 
-    def displayTable(): Unit = {
-      spark.sql("Select * From CovidDeathsUs").show(false)
+    def checkYear(input: String): Boolean = {
+      if(input == "2020"|| input == "2021") {
+        return true
+      }
+      false
     }
 
     def deathPercentageState(): Unit = {
@@ -185,18 +161,28 @@ object MortalityData {
 
       println("Enter month to retrieve possible death information involving covid-19:")
       promptMessage()
-      val monthCovid = StdIn.readLine()
+      var monthCovid = StdIn.readLine().capitalize
+      while(!checkMonth(monthCovid)) {
+        println(s"${RED}Invalid month.$RESET Enter the full month name to retrieve possible death information involving covid-19 (ex. 'january'):")
+        promptMessage()
+        monthCovid = StdIn.readLine().capitalize
+      }
 
       println("Enter year to retrieve possible death information involving covid-19:")
       promptMessage()
-      val yearCovid = StdIn.readLine()
+      var yearCovid = StdIn.readLine()
+      while(!checkYear(yearCovid)) {
+        println(s"${RED}Invalid year.$RESET Enter the full year to retrieve possible death information involving covid-19 (ex. '2020'):")
+        promptMessage()
+        yearCovid = StdIn.readLine()
+      }
 
       println("Enter state name to retrieve possible death information involving covid-19:")
       promptMessage()
-      val stateName = StdIn.readLine()
+      val stateName = StdIn.readLine().capitalize
 
       try {
-        val temp2 = spark.sql(s"Select ${monthCovid}_${yearCovid} From CovidDeathsUs Where Combined_Key like '%, $stateName, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
+        val temp2 = spark.sql(s"Select ${monthCovid}_$yearCovid From CovidDeathsUs Where Combined_Key like '%, $stateName, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
 
         val temp2Num = temp2.count().toInt
         val t1 = temp2.take(temp2Num)
@@ -205,7 +191,7 @@ object MortalityData {
           sum = sum + t1(i).getString(0).toInt
         }
 
-        val restTemp = spark.sql(s"Select ${monthCovid}_${yearCovid} From CovidDeathsUs Where Admin2 != 'null' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
+        val restTemp = spark.sql(s"Select ${monthCovid}_$yearCovid From CovidDeathsUs Where Admin2 != 'null' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
         val restTempNum = restTemp.count.toInt
         val r1 = restTemp.take(restTempNum)
 
@@ -213,42 +199,53 @@ object MortalityData {
           totalUSDeath = totalUSDeath + r1(i).getString(0).toInt
         }
 
-        val percentageState = ((sum.toFloat / totalUSDeath).toDouble)
+        val percentageState = (sum.toFloat / totalUSDeath).toDouble
         val percentageStateVal = percentageState * 100
 
-        print("The percentage is: ")
+        print(s"$GREEN${BOLD}The percentage is: ")
         println(f"$percentageStateVal%.2f" + "%")
 
         if (percentageState < 0.05) {
-          println("This state is safe for incoming and outgoing travel.")
+          println(s"This state is safe for incoming and outgoing travel.$RESET")
         } else {
-          println("It is not advised to travel to this state.")
+          println(s"It is not advised to travel to this state.$RESET")
         }
       }
       catch {
-        case e => println("Invalid Selection")
+        case _: Throwable => println(s"${RED}Invalid Selection$RESET")
       }
+      print("Enter Any Key To Return")
+      StdIn.readLine()
     }
 
     def deathMonthlyAvg(): Unit = {
       //Average death per month println statement here:
       var sumAvg = 0
 
-      print("Enter month to retrieve the average possible death information involving covid-19:")
+      println("Enter month to retrieve the average death information involving covid-19:")
       promptMessage()
-      val monthAvg = StdIn.readLine()
+      var monthAvg = StdIn.readLine().capitalize
+      while(!checkMonth(monthAvg)) {
+        println(s"${RED}Invalid month.$RESET Enter the full month name to retrieve the average death information involving covid-19 (ex. 'january'):")
+        promptMessage()
+        monthAvg = StdIn.readLine().capitalize
+      }
 
-      print("Enter year to retrieve the average possible death information involving covid-19:")
+      println("Enter year to retrieve the average death information involving covid-19:")
       promptMessage()
-      val yearAvg = StdIn.readLine()
+      var yearAvg = StdIn.readLine()
+      while(!checkYear(yearAvg)) {
+        println(s"${RED}Invalid year.$RESET Enter the full year to retrieve average death information involving covid-19 (ex. '2020'):")
+        promptMessage()
+        yearAvg = StdIn.readLine()
+      }
 
-      print("Enter state name to retrieve the average possible death information involving covid-19:")
-
+      println("Enter state name to retrieve the average possible death information involving covid-19:")
       promptMessage()
-      val stateNameAvg = StdIn.readLine()
+      val stateNameAvg = StdIn.readLine().capitalize
 
       try {
-        val avgStateDeath = spark.sql(s"Select ${monthAvg}_${yearAvg} From CovidDeathsUs Where Combined_Key like '%, $stateNameAvg, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
+        val avgStateDeath = spark.sql(s"Select ${monthAvg}_$yearAvg From CovidDeathsUs Where Combined_Key like '%, $stateNameAvg, US' and Combined_Key not like 'Out of%' and Combined_Key not like 'Unassigned%'")
         val avgStateDeathCount = avgStateDeath.count.toInt
         val avgState1 = avgStateDeath.take(avgStateDeathCount)
 
@@ -257,16 +254,18 @@ object MortalityData {
         }
 
         val averageStateMonth = sumAvg.toFloat / avgStateDeathCount
-        println(s"${BOLD}In the month of $monthAvg $yearAvg, there was an average of $averageStateMonth Covid-19 related deaths$RESET")
+        println(s"$GREEN${BOLD}In the month of $monthAvg $yearAvg, there was an average of $averageStateMonth Covid-19 related deaths$RESET")
       }
       catch {
-        case e => println("Invalid Selection")
+        case _: Throwable => println("Invalid Selection")
       }
+      print("Enter Any Key To Return")
+      StdIn.readLine()
     }
 
     def springOrSummerTravel(): Unit = {
-      print("Please select the state you want to compare for the spring and summer months of 2020: \n>")
-
+      println("Please select the state you want to compare for the spring and summer months of 2020:")
+      promptMessage()
       val springSummerState = StdIn.readLine()
       //Summer(June, July, August) of 2020 because only in 2020 are these months listed month deaths if need be is here:
       var summerTotal = 0
@@ -298,9 +297,9 @@ object MortalityData {
       val springMonthCountMarch = springMonthMarchDF.count.toInt
       val spring1 = springMonthMarchDF.take(springMonthCountMarch)
       val springMonthCountApril = springMonthAprilDF.count.toInt
-      var spring2 = springMonthAprilDF.take(springMonthCountApril)
+      val spring2 = springMonthAprilDF.take(springMonthCountApril)
       val springMonthCountMay = springMonthMayDF.count.toInt
-      var spring3 = springMonthMayDF.take(springMonthCountMay)
+      val spring3 = springMonthMayDF.take(springMonthCountMay)
 
       for(i <- 0 until springMonthCountMarch){
         springTotal = springTotal + spring1(i).getString(0).toInt
@@ -317,15 +316,12 @@ object MortalityData {
       val springMonthsMore = springTotal - summerTotal
 
       if(summerTotal > springTotal) {
-        println(s"It's safer to travel in the spring there are $summerMonthsMore more people who have died in the summer")
+        println(s"$GREEN${BOLD}It's safer to travel in the spring there are $summerMonthsMore more people who have died in the summer$RESET")
+      } else {
+        println(s"$GREEN${BOLD}It's safer to travel in the summer there are $springMonthsMore more people who have died in the spring$RESET")
       }
-      else {
-        println(s"It's safer to travel in the summer there are $springMonthsMore more people who have died in the spring")
-      }
-    }
-
-    def closeDeathTable(): Unit = {
-      spark.close()
+      print("Enter Any Key To Return")
+      StdIn.readLine()
     }
   }
 }

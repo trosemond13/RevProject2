@@ -1,6 +1,6 @@
 package com.data
 
-import com.Main.promptMessage
+import com.Main.{clearScreen, promptMessage}
 
 import scala.io.StdIn
 import com.tools.Router.dbCon
@@ -16,8 +16,8 @@ object InfectionData {
   // Sub Menu For Infections Data
   def infections_menu(): Unit = {
     while(!isFinishedI) {
-      println(s"""
-                 |${UNDERLINED}MAIN/START RCTP/Infection Data Menu: Please select one of the following menu options.${RESET}
+      clearScreen
+      println(s"""${UNDERLINED}MAIN/START RCTP/Infection Data Menu: Please select one of the following menu options.$RESET
                  |
                  |--> 1.) Highest Infection Rates By State
                  |--> 2.) Total US Infections
@@ -37,9 +37,9 @@ object InfectionData {
       {week_by_state()}
       else if(infectionsSelector == "5") {
         isFinishedI = true
+      } else {
+        println("Invalid Option")
       }
-      else
-      {println("Invalid Option")}
     }
   }
 
@@ -75,14 +75,14 @@ object InfectionData {
   // Breakdown Average Infection By State
   def week_by_state(): Unit = {
     println("\nAverage Weekly Infections By State\n")
-    val avgByStateDf = create_df().select(col("Province_State"), round((col("5/29/21") / 494), 0) * 7)
+    val avgByStateDf = create_df().select(col("Province_State"), round(col("5/29/21") / 494, 0) * 7)
       .where(!col("Province_State").contains("Princess"))
       .withColumnRenamed("(round((5/29/21 / 494), 0) * 7)", "Infections")
       .groupBy(col("Province_State")).sum("Infections")
       .withColumnRenamed("sum(Infections)", "Infections Per Week")
       .orderBy(col("sum(Infections)").desc)
 
-    avgByStateDf.show(Int.MaxValue, false)
+    avgByStateDf.show(Int.MaxValue, truncate = false)
 
     print("Enter Any Key To Return")
     StdIn.readLine()
@@ -90,7 +90,7 @@ object InfectionData {
 
   // Average Weekly Infections By State
   def average_weekly_infections(): Unit = {
-    val avgDf = create_df().select((sum(col("5/29/21") / 494)) * 7)
+    val avgDf = create_df().select(sum(col("5/29/21") / 494) * 7)
       .withColumnRenamed("(sum((5/29/21 / 494)) * 7)", "Infections Per Week")
       .collect()
 
